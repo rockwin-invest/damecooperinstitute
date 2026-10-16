@@ -1,0 +1,524 @@
+/* ============================================================
+   DAMECOOPER INSTITUTE — ACCEPT INVITATION
+   ============================================================ */
+
+/* ============================================
+   TOKENS
+   ============================================ */
+:root {
+  --navy: #10243a; --navy-deep: #091827; --navy-mid: #1a3554;
+  --gold: #b69a59; --gold-dark: #987b40; --gold-light: #d4bc85;
+  --ivory: #f7f5ef; --white: #ffffff;
+  --text-main: #202a35; --text-secondary: #66717d; --neutral: #edf1f5;
+  --success: #2e7d5b; --success-bg: #e8f4ee;
+  --warning: #b87333;
+  --danger: #b23a3a; --danger-bg: #fbeaea;
+  --info: #315c76; --info-bg: #e8f0f6;
+  --border-thin: rgba(16,36,58,0.08);
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --radius: 2px;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  line-height: 1.6;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(182, 154, 89, 0.12), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(49, 92, 118, 0.15), transparent 40%),
+    linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* ============================================
+   CARD
+   ============================================ */
+.card {
+  background-color: var(--white);
+  width: 100%;
+  max-width: 460px;
+  padding: 44px 40px 36px;
+  border-radius: var(--radius);
+  box-shadow: 0 40px 80px -24px rgba(9, 24, 39, 0.45);
+  position: relative;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 4px;
+  background-color: var(--gold);
+}
+
+/* ============================================
+   BRAND LOCKUP
+   ============================================ */
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.mark {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--navy);
+  color: var(--gold);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: var(--radius);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mark::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(182, 154, 89, 0.4);
+  border-radius: 1px;
+}
+
+.brand-text strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.brand-text span {
+  display: block;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.card h2 {
+  font-size: 1.75rem;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.card > p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin-bottom: 26px;
+  line-height: 1.65;
+}
+
+/* ============================================
+   MESSAGES
+   ============================================ */
+.msg {
+  display: none;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.msg.show {
+  display: flex;
+}
+
+.msg i {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 0.875rem;
+}
+
+.msg.error {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+  border-left: 3px solid var(--danger);
+}
+
+.msg.success {
+  background-color: var(--success-bg);
+  color: var(--success);
+  border-left: 3px solid var(--success);
+}
+
+.msg.info {
+  background-color: var(--info-bg);
+  color: var(--info);
+  border-left: 3px solid var(--info);
+}
+
+/* ============================================
+   INFO NOTE
+   ============================================ */
+.info-note {
+  padding: 14px 16px;
+  background-color: var(--ivory);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 22px;
+}
+
+.info-note strong {
+  color: var(--navy);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ============================================
+   FORM FIELDS
+   ============================================ */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.field label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.field label .req {
+  color: var(--gold-dark);
+}
+
+.field-input {
+  position: relative;
+  display: block;
+}
+
+.field-input input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--text-main);
+  background-color: var(--white);
+  border: 1px solid var(--border-thin);
+  border-radius: var(--radius);
+  padding: 13px 44px 13px 14px;
+  transition: var(--transition);
+}
+
+.field-input input:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(182, 154, 89, 0.14);
+}
+
+.field-input input.invalid {
+  border-color: var(--danger);
+}
+
+.field-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  border-radius: var(--radius);
+  transition: var(--transition);
+  font-size: 0.875rem;
+}
+
+.field-toggle:hover {
+  color: var(--navy);
+  background-color: var(--neutral);
+}
+
+.field-error {
+  display: none;
+  font-size: 0.75rem;
+  color: var(--danger);
+  line-height: 1.5;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.field-error.show {
+  display: flex;
+}
+
+/* ============================================
+   PASSWORD STRENGTH
+   ============================================ */
+.pw-strength {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.pw-strength-bar {
+  height: 4px;
+  background-color: var(--neutral);
+  border-radius: 2px;
+  transition: background-color 0.25s ease;
+}
+
+.pw-strength-bar.active { background-color: var(--gold); }
+.pw-strength-bar.weak   { background-color: var(--danger); }
+.pw-strength-bar.good   { background-color: var(--warning); }
+.pw-strength-bar.strong { background-color: var(--success); }
+
+.pw-strength-label {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+/* ============================================
+   PASSWORD REQUIREMENTS
+   ============================================ */
+.pw-requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  list-style: none;
+}
+
+.pw-req {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.pw-req i {
+  font-size: 0.625rem;
+  color: var(--neutral);
+  width: 12px;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.pw-req.met i { color: var(--success); }
+.pw-req.met   { color: var(--success); }
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 26px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--radius);
+  transition: var(--transition);
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.btn-gold {
+  background-color: var(--gold);
+  color: var(--navy-deep);
+}
+
+.btn-gold:hover:not(:disabled) {
+  background-color: var(--gold-dark);
+  color: var(--white);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn i.fa-circle-notch {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   SUCCESS STATE
+   ============================================ */
+.success-state {
+  display: none;
+  text-align: center;
+  padding: 12px 0 8px;
+}
+
+.success-state.show {
+  display: block;
+}
+
+.success-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  color: var(--gold-dark);
+  font-size: 1.75rem;
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.success-state h3 {
+  font-size: 1.5rem;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.success-state p {
+  font-size: 0.875rem;
+  line-height: 1.65;
+  margin-bottom: 22px;
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.success-state .btn {
+  width: auto;
+  min-width: 200px;
+}
+
+/* ============================================
+   CARD FOOT
+   ============================================ */
+.card-foot {
+  padding-top: 22px;
+  border-top: 1px solid var(--border-thin);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.card-foot a {
+  color: var(--gold-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.card-foot a:hover {
+  color: var(--navy);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 480px) {
+  body {
+    padding: 20px 14px;
+  }
+  .card {
+    padding: 32px 24px 28px;
+  }
+  .card::before {
+    width: 48px;
+    height: 3px;
+  }
+  .card h2 {
+    font-size: 1.5rem;
+  }
+  .success-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
