@@ -1104,14 +1104,22 @@ app.get(
     try {
       const users = await User.find().sort({ createdAt: -1 });
       const list = users.map((u) => {
-        const pub = u.toPublicJSON();
-        return {
-          ...pub,
-          lastLogin: u.lastLoginAt
-            ? u.lastLoginAt.toISOString().slice(0, 16).replace("T", " ")
-            : "—"
-        };
-      });
+  const pub = u.toPublicJSON();
+  return {
+    id: u._id.toString(),
+    loginId: pub.loginId,
+    role: pub.role,
+    firstName: pub.firstName,
+    lastName: pub.lastName,
+    initials: pub.initials,
+    email: pub.email,
+    phone: pub.phone,
+    status: u.status || "active",
+    lastLogin: u.lastLoginAt
+      ? u.lastLoginAt.toISOString().slice(0, 16).replace("T", " ")
+      : "—"
+  };
+});
 
       const invites = await Invitation.find({
         acceptedAt: null,
