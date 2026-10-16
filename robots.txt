@@ -1,0 +1,23 @@
+# ============================================================
+# robots.txt — DameCooper Institute
+# https://damecooperinstitute.com
+# ============================================================
+
+User-agent: *
+Allow: /
+
+# Keep crawlers out of authenticated and internal pages
+Disallow: /student-portal.html
+Disallow: /staff-portal.html
+Disallow: /admin-portal.html
+Disallow: /admin-users.html
+Disallow: /signin.html
+Disallow: /accept-invite.html
+Disallow: /reset-password.html
+
+# Block the API server (it's on a different host but list anyway)
+Disallow: /api/
+Disallow: /server/
+
+# Sitemap location
+Sitemap: https://damecooperinstitute.com/sitemap.xml
