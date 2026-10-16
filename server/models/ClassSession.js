@@ -1,9 +1,13 @@
 // ============================================================
 // ClassSession model
 // ------------------------------------------------------------
-// One document per recurring weekly class session.
-// A course that meets Monday, Wednesday, and Friday will have
-// three ClassSession documents for that student.
+// One document per student, per weekly class session.
+// A course that meets Monday, Wednesday, and Friday for a given
+// student will have three ClassSession documents for that student.
+//
+// `staffId` links the session to the lecturer who teaches it, so
+// staff portals can query "which sessions do I teach?" without
+// relying on the free-text `lecturer` field.
 // ============================================================
 
 const { mongoose } = require("../db");
@@ -14,6 +18,11 @@ const classSessionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true
+    },
+    staffId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       index: true
     },
     courseCode: { type: String, required: true, uppercase: true, trim: true },

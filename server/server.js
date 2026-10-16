@@ -814,6 +814,172 @@ app.get(
   }
 );
 
+
+// ------------------------------------------------------------
+// STAFF — dashboard aggregate
+// ------------------------------------------------------------
+app.get(
+  "/api/staff/dashboard",
+  requireAuth,
+  requireRole("staff", "admin"),
+  async (req, res, next) => {
+    try {
+      const user = await User.findById(req.user.sub);
+      if (!user) {
+        return res.status(404).json({ message: "User not found.", code: "NOT_FOUND" });
+      }
+
+      const sessions = await ClassSession.find({ staffId: req.user.sub })
+        .sort({ dayOfWeek: 1, startTime: 1 });
+
+      // Unique course codes
+      const courseSet = new Map();
+      sessions.forEach((s) => {
+        if (!courseSet.has(s.courseCode)) {
+          courseSet.set(s.courseCode, {
+            code: s.courseCode,
+            title: s.courseTitle,
+            semester: s.semester,
+            sessions: 0
+          });
+        }
+        courseSet.get(s.courseCode).sessions += 1;
+      });
+      const courses = Array.from(courseSet.values());
+
+      // Unique students across all the staff member's courses
+      const courseCodes = courses.map((c) => c.code);
+      const studentIds = await ClassSession.distinct("studentId", {
+        courseCode: { $in: courseCodes }
+      });
+      const totalStudents = studentIds.length;
+
+      // Today's schedule
+      const todaySessions = sessions
+        .filter((s) => s.dayOfWeek === todayName())
+        .map((s) => s.toPublicJSON());
+
+      // Recent announcements (global feed)
+      const announcements = await Announcement.find({
+        $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+      })
+        .sort({ publishedAt: -1 })
+        .limit(3);
+
+      // Awaiting grading — count of Grade docs still missing points for
+      // this staff member's courses. Since we don't track "submitted" yet,
+      // we approximate with a count of zero.
+      const awaitingGrading = 0;
+
+      res.json({
+        profile: user.toPublicJSON(),
+        stats: {
+          activeCourses: courses.length,
+          totalStudents,
+          awaitingGrading,
+          classesToday: todaySessions.length
+        },
+        courses,
+        todayClasses: todaySessions,
+        announcements: announcements.map((a) => a.toPublicJSON())
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// ------------------------------------------------------------
+// STAFF — courses taught
+// ------------------------------------------------------------
+app.get(
+  "/api/staff/courses",
+  requireAuth,
+  requireRole("staff", "admin"),
+  async (req, res, next) => {
+    try {
+      const sessions = await ClassSession.find({ staffId: req.user.sub });
+
+      const courseSet = new Map();
+      sessions.forEach((s) => {
+        if (!courseSet.has(s.courseCode)) {
+          courseSet.set(s.courseCode, {
+            code: s.courseCode,
+            title: s.courseTitle,
+            semester: s.semester,
+            sessions: 0,
+            studentIds: new Set()
+          });
+        }
+        courseSet.get(s.courseCode).sessions += 1;
+        courseSet.get(s.courseCode).studentIds.add(s.studentId.toString());
+      });
+
+      const courses = await Promise.all(
+        Array.from(courseSet.values()).map(async (c) => ({
+          code: c.code,
+          title: c.title,
+          semester: c.semester,
+          sessions: c.sessions,
+          studentCount: c.studentIds.size
+        }))
+      );
+
+      res.json({ courses });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// ------------------------------------------------------------
+// STAFF — students enrolled in a course
+// ------------------------------------------------------------
+app.get(
+  "/api/staff/courses/:courseCode/students",
+  requireAuth,
+  requireRole("staff", "admin"),
+  async (req, res, next) => {
+    try {
+      const courseCode = req.params.courseCode.toUpperCase();
+
+      // Ensure the staff member actually teaches this course
+      const teaches = await ClassSession.findOne({
+        staffId: req.user.sub,
+        courseCode
+      });
+      if (!teaches) {
+        return res.status(403).json({
+          message: "You do not teach this course.",
+          code: "FORBIDDEN"
+        });
+      }
+
+      const studentIds = await ClassSession.distinct("studentId", { courseCode });
+      const students = await User.find({ _id: { $in: studentIds } })
+        .sort({ lastName: 1, firstName: 1 });
+
+      res.json({
+        courseCode,
+        courseTitle: teaches.courseTitle,
+        students: students.map((s) => {
+          const pub = s.toPublicJSON();
+          return {
+            id: pub._id,
+            loginId: pub.loginId,
+            firstName: pub.firstName,
+            lastName: pub.lastName,
+            initials: pub.initials,
+            email: pub.email
+          };
+        })
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // ------------------------------------------------------------
 // STAFF — attendance marking
 // ------------------------------------------------------------
