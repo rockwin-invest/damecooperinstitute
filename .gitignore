@@ -8,10 +8,14 @@ package-lock.json
 # ENVIRONMENT & SECRETS
 # ============================================
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 *.pem
 *.key
+*.p12
+*.pfx
+secrets.json
+credentials.json
 
 # ============================================
 # EDITOR / OS
@@ -33,7 +37,7 @@ yarn-error.log*
 .npm/
 
 # ============================================
-# BUILD OUTPUT (if you add a build step later)
+# BUILD OUTPUT
 # ============================================
 dist/
 build/
