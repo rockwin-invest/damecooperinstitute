@@ -288,18 +288,26 @@ app.post("/api/auth/signin", loginLimiter, async (req, res, next) => {
 
     const user = await User.findOne({ loginId: loginId.trim().toUpperCase() });
 
-    // Always run bcrypt.compare even if user is null — constant-time response
-    const hash = user
-      ? user.passwordHash
-      : "$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalid";
-    const ok = await bcrypt.compare(password, hash);
+// Real bcrypt hash of the string "invalid" — used only to normalize
+// response timing when the user doesn't exist. Must be a VALID hash
+// or bcryptjs throws instead of returning false.
+const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
-    if (!user || !ok) {
-      return res.status(401).json({
-        message: "The login ID or password you entered is incorrect.",
-        code: "INVALID_CREDENTIALS",
-      });
-    }
+if (!user) {
+  await bcrypt.compare(password, DUMMY_HASH);
+  return res.status(401).json({
+    message: "The login ID or password you entered is incorrect.",
+    code: "INVALID_CREDENTIALS",
+  });
+}
+
+const ok = await bcrypt.compare(password, user.passwordHash);
+if (!ok) {
+  return res.status(401).json({
+    message: "The login ID or password you entered is incorrect.",
+    code: "INVALID_CREDENTIALS",
+  });
+}
 
     if (user.status === "suspended") {
       return res.status(403).json({
