@@ -4,38 +4,50 @@
 // Runs on Render. MongoDB Atlas for storage.
 //
 // Required environment variables:
-//   PORT          — injected by Render; do not set manually
-//   NODE_ENV      — "production"
-//   JWT_SECRET    — long random string (generate in Render)
-//   CORS_ORIGIN   — comma-separated allowed origins
-//   FRONTEND_URL  — public URL of the static site (for invite links)
-//   MONGODB_URI   — mongodb+srv://user:pass@cluster/db?retryWrites=true&w=majority
+//   PORT            — injected by Render
+//   NODE_ENV        — "production"
+//   JWT_SECRET      — long random string
+//   CORS_ORIGIN     — comma-separated allowed origins
+//   FRONTEND_URL    — public URL of the static site
+//   MONGODB_URI     — mongodb+srv://...
+//
+// Optional:
+//   RESEND_API_KEY  — enables real email sending
+//   EMAIL_FROM      — sender name + address
 // ============================================================
 
 require("dotenv").config();
 
-const express     = require("express");
-const cors        = require("cors");
-const helmet      = require("helmet");
-const rateLimit   = require("express-rate-limit");
-const jwt         = require("jsonwebtoken");
-const bcrypt      = require("bcryptjs");
-const crypto      = require("crypto");
-const mongoose    = require("mongoose");
+const express   = require("express");
+const cors      = require("cors");
+const helmet    = require("helmet");
+const rateLimit = require("express-rate-limit");
+const jwt       = require("jsonwebtoken");
+const bcrypt    = require("bcryptjs");
+const crypto    = require("crypto");
+
+const { connectDb, mongoose } = require("./db");
+
+const User                = require("./models/User");
+const Invitation          = require("./models/Invitation");
+const Grade               = require("./models/Grade");
+const ClassSession        = require("./models/ClassSession");
+const Invoice             = require("./models/Invoice");
+const Document            = require("./models/Document");
+const Announcement        = require("./models/Announcement");
+const Attendance          = require("./models/Attendance");
+const PasswordResetToken  = require("./models/PasswordResetToken");
+
+const { sendEmail } = require("./email");
+const storage       = require("./storage");
 
 const app = express();
-
-// ------------------------------------------------------------
-// TRUST PROXY
-// Render runs the app behind a reverse proxy. Without this,
-// express-rate-limit crashes at startup.
-// ------------------------------------------------------------
 app.set("trust proxy", 1);
 
-const PORT          = process.env.PORT || 3000;
-const JWT_SECRET    = process.env.JWT_SECRET || "dev-only-change-me";
+const PORT           = process.env.PORT || 3000;
+const JWT_SECRET     = process.env.JWT_SECRET || "dev-only-change-me";
 const JWT_EXPIRES_IN = "4h";
-const MONGODB_URI   = process.env.MONGODB_URI;
+const FRONTEND_URL   = process.env.FRONTEND_URL || "https://damecooperinstitute.com";
 
 // ------------------------------------------------------------
 // CORS
@@ -57,7 +69,7 @@ app.use(
     },
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
-    maxAge: 86400,
+    maxAge: 86400
   })
 );
 
@@ -67,7 +79,7 @@ app.use(
 app.use(
   helmet({
     contentSecurityPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginResourcePolicy: { policy: "cross-origin" }
   })
 );
 
@@ -86,138 +98,33 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   message: {
     message: "Too many login attempts. Please try again later.",
-    code: "RATE_LIMITED",
-  },
+    code: "RATE_LIMITED"
+  }
+});
+
+const forgotLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,   // 1 hour
+  limit: 5,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    message: "Too many password reset requests. Please try again later.",
+    code: "RATE_LIMITED"
+  }
 });
 
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 120,
   standardHeaders: "draft-7",
-  legacyHeaders: false,
+  legacyHeaders: false
 });
 
 app.use("/api", apiLimiter);
 
-// ============================================================
-// DATABASE MODELS
-// ============================================================
-
 // ------------------------------------------------------------
-// User
-// ------------------------------------------------------------
-const userSchema = new mongoose.Schema(
-  {
-    loginId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-      uppercase: true,
-      trim: true,
-    },
-    role: {
-      type: String,
-      required: true,
-      enum: ["student", "staff", "admin"],
-      index: true,
-    },
-    firstName: { type: String, required: true, trim: true },
-    lastName:  { type: String, required: true, trim: true },
-    initials:  { type: String, trim: true },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
-    phone: { type: String, trim: true },
-
-    passwordHash: { type: String, required: true },
-    status: {
-      type: String,
-      enum: ["pending", "active", "suspended"],
-      default: "active",
-      index: true,
-    },
-    lastLoginAt: { type: Date, default: null },
-
-    // Student fields (optional)
-    dateOfBirth:        Date,
-    nationality:        String,
-    programme:          String,
-    programmeCode:      String,
-    school:             String,
-    level:              String,
-    studyMode:          String,
-    startDate:          Date,
-    expectedGraduation: Date,
-    advisor:            String,
-    campus:             String,
-
-    // Staff fields (optional)
-    department: String,
-    title:      String,
-  },
-  { timestamps: true, collection: "users" }
-);
-
-userSchema.pre("save", function () {
-  if (!this.initials && this.firstName && this.lastName) {
-    this.initials = (this.firstName[0] + this.lastName[0]).toUpperCase();
-  }
-  // No next() — Mongoose 8 treats sync functions as complete
-});
-
-userSchema.methods.toPublicJSON = function () {
-  const obj = this.toObject();
-  delete obj.passwordHash;
-  delete obj.__v;
-  return obj;
-};
-
-const User = mongoose.model("User", userSchema);
-
-// ------------------------------------------------------------
-// Invitation
-// ------------------------------------------------------------
-const invitationSchema = new mongoose.Schema(
-  {
-    token: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
-    firstName: { type: String, required: true },
-    lastName:  { type: String, required: true },
-    email:     { type: String, required: true, lowercase: true, trim: true },
-    loginId:   { type: String, required: true, uppercase: true, trim: true },
-    role: {
-      type: String,
-      required: true,
-      enum: ["student", "staff", "admin"],
-    },
-    programme: String,
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    acceptedAt: { type: Date, default: null },
-    expiresAt: {
-      type: Date,
-      default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      index: true,
-    },
-  },
-  { timestamps: true, collection: "invitations" }
-);
-
-const Invitation = mongoose.model("Invitation", invitationSchema);
-
-// ============================================================
 // AUTH MIDDLEWARE
-// ============================================================
-
+// ------------------------------------------------------------
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
@@ -232,7 +139,7 @@ function requireAuth(req, res, next) {
   } catch {
     res.status(401).json({
       message: "Your session has expired. Please sign in again.",
-      code: "TOKEN_EXPIRED",
+      code: "TOKEN_EXPIRED"
     });
   }
 }
@@ -242,22 +149,42 @@ function requireRole(...allowedRoles) {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         message: "You do not have permission to access this resource.",
-        code: "FORBIDDEN",
+        code: "FORBIDDEN"
       });
     }
     next();
   };
 }
 
+// ------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------
+function weekOrder() {
+  return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+}
+
+function todayName() {
+  const names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  return names[new Date().getDay()];
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ============================================================
 // HEALTH CHECK
 // ============================================================
-
 app.get("/", (req, res) => {
   res.json({
     name: "DameCooper Institute API",
     status: "ok",
-    time: new Date().toISOString(),
+    time: new Date().toISOString()
   });
 });
 
@@ -265,14 +192,13 @@ app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
     service: "damecooperinstitute-api",
-    db: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    db: mongoose.connection.readyState === 1 ? "connected" : "disconnected"
   });
 });
 
 // ============================================================
 // AUTH ROUTES
 // ============================================================
-
 app.post("/api/auth/signin", loginLimiter, async (req, res, next) => {
   try {
     const body = req.body || {};
@@ -282,37 +208,34 @@ app.post("/api/auth/signin", loginLimiter, async (req, res, next) => {
     if (!loginId || !password) {
       return res.status(400).json({
         message: "Login ID and password are required.",
-        code: "VALIDATION_ERROR",
+        code: "VALIDATION_ERROR"
       });
     }
 
     const user = await User.findOne({ loginId: loginId.trim().toUpperCase() });
 
-// Real bcrypt hash of the string "invalid" — used only to normalize
-// response timing when the user doesn't exist. Must be a VALID hash
-// or bcryptjs throws instead of returning false.
-const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+    // Constant-time response — always run bcrypt even if user not found
+    const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+    if (!user) {
+      await bcrypt.compare(password, DUMMY_HASH);
+      return res.status(401).json({
+        message: "The login ID or password you entered is incorrect.",
+        code: "INVALID_CREDENTIALS"
+      });
+    }
 
-if (!user) {
-  await bcrypt.compare(password, DUMMY_HASH);
-  return res.status(401).json({
-    message: "The login ID or password you entered is incorrect.",
-    code: "INVALID_CREDENTIALS",
-  });
-}
-
-const ok = await bcrypt.compare(password, user.passwordHash);
-if (!ok) {
-  return res.status(401).json({
-    message: "The login ID or password you entered is incorrect.",
-    code: "INVALID_CREDENTIALS",
-  });
-}
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) {
+      return res.status(401).json({
+        message: "The login ID or password you entered is incorrect.",
+        code: "INVALID_CREDENTIALS"
+      });
+    }
 
     if (user.status === "suspended") {
       return res.status(403).json({
         message: "Your account is suspended. Please contact support.",
-        code: "ACCOUNT_SUSPENDED",
+        code: "ACCOUNT_SUSPENDED"
       });
     }
 
@@ -331,7 +254,6 @@ if (!ok) {
   }
 });
 
-// Backwards-compatible alias
 app.post("/api/auth/login", loginLimiter, (req, res, next) => {
   req.url = "/api/auth/signin";
   app._router.handle(req, res, next);
@@ -342,66 +264,210 @@ app.post("/api/auth/logout", requireAuth, (req, res) => {
 });
 
 // ============================================================
-// STUDENT ROUTES
-// ------------------------------------------------------------
-// Grades, timetable, fees, announcements, and documents are
-// still demo stubs. They live inline here until you build the
-// real academic data model.
+// CHANGE PASSWORD (authenticated)
 // ============================================================
+app.post("/api/auth/change-password", requireAuth, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
 
-const GRADES = [
-  { code: "CS201",   title: "Data Structures & Algorithms", credits: 20, grade: "A",  points: 8 },
-  { code: "CS210",   title: "Operating Systems",            credits: 20, grade: "B+", points: 7 },
-  { code: "CS220",   title: "Database Systems",             credits: 20, grade: "A",  points: 8 },
-  { code: "MATH201", title: "Linear Algebra",               credits: 15, grade: "A-", points: 7 },
-  { code: "ENG205",  title: "Technical Communication",      credits: 15, grade: "B",  points: 6 },
-];
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current and new passwords are required.",
+        code: "VALIDATION_ERROR"
+      });
+    }
 
-const TIMETABLE = {
-  Monday: [
-    { time: "09:00 – 10:30", title: "Data Structures & Algorithms", room: "B-201", lecturer: "Dr. K. Ngata" },
-    { time: "11:00 – 12:30", title: "Operating Systems",            room: "B-105", lecturer: "Prof. L. Chen" },
-  ],
-  Tuesday: [
-    { time: "10:00 – 11:30", title: "Database Systems",             room: "B-204", lecturer: "Dr. A. Patel" },
-  ],
-  Wednesday: [
-    { time: "09:00 – 10:30", title: "Data Structures & Algorithms", room: "B-201", lecturer: "Dr. K. Ngata" },
-  ],
-  Thursday: [
-    { time: "09:00 – 10:30", title: "Database Systems",             room: "B-204", lecturer: "Dr. A. Patel" },
-  ],
-  Friday: [
-    { time: "14:00 – 17:00", title: "Project Workshop",             room: "Lab 1", lecturer: "Dr. K. Ngata" },
-  ],
-};
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        message: "New password must be at least 8 characters.",
+        code: "VALIDATION_ERROR"
+      });
+    }
 
-const FEES = {
-  currency: "NZD",
-  total: 12800,
-  paid: 9600,
-  outstanding: 3200,
-  items: [
-    { id: "INV-2026-001", description: "Semester 1 tuition",             amount: 6400, dueDate: "2026-02-20", status: "paid" },
-    { id: "INV-2026-002", description: "Student services levy",          amount: 700,  dueDate: "2026-02-20", status: "paid" },
-    { id: "INV-2026-003", description: "Semester 2 tuition",             amount: 2500, dueDate: "2026-07-15", status: "paid" },
-    { id: "INV-2026-004", description: "Semester 2 tuition — remainder", amount: 3200, dueDate: "2026-07-15", status: "due" },
-  ],
-};
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        message: "New password must be different from the current one.",
+        code: "VALIDATION_ERROR"
+      });
+    }
 
-const ANNOUNCEMENTS = [
-  { id: 1, tag: "Academic", date: "2026-04-10", title: "Semester 1 results released",        body: "Your Semester 1 results are now available in the Grades section of the portal.", priority: "high" },
-  { id: 2, tag: "Fees",     date: "2026-04-08", title: "Semester 2 payment reminder",        body: "The remaining Semester 2 tuition balance is due by 15 July 2026.",               priority: "medium" },
-  { id: 3, tag: "Campus",   date: "2026-04-02", title: "Library extended hours",             body: "The campus library will remain open until 10:00 PM during the examination period.", priority: "low" },
-  { id: 4, tag: "Event",    date: "2026-03-28", title: "Careers Evening — 12 April",         body: "Meet graduate employers from across New Zealand. Register via Careers Services.",  priority: "medium" },
-];
+    const user = await User.findById(req.user.sub);
+    if (!user) {
+      return res.status(404).json({ message: "User not found.", code: "NOT_FOUND" });
+    }
 
-const DOCUMENTS = [
-  { id: "doc-1", name: "Enrolment confirmation letter", size: "142 KB", type: "PDF", updatedAt: "2026-02-26" },
-  { id: "doc-2", name: "Academic transcript",            size: "320 KB", type: "PDF", updatedAt: "2026-03-15" },
-  { id: "doc-3", name: "Fees statement — Semester 1",    size: "88 KB",  type: "PDF", updatedAt: "2026-02-22" },
-  { id: "doc-4", name: "Programme handbook 2026",        size: "1.2 MB", type: "PDF", updatedAt: "2026-01-15" },
-];
+    const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!ok) {
+      return res.status(401).json({
+        message: "Your current password is incorrect.",
+        code: "INVALID_CREDENTIALS"
+      });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================================
+// PASSWORD RESET (unauthenticated)
+// ------------------------------------------------------------
+// The response is always generic, whether or not the email
+// exists, to prevent account enumeration.
+// ============================================================
+app.post("/api/auth/forgot-password", forgotLimiter, async (req, res, next) => {
+  try {
+    const { email } = req.body || {};
+
+    const genericResponse = {
+      ok: true,
+      message:
+        "If that email matches a DameCooper account, a reset link is on its way."
+    };
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({
+        message: "Email address is required.",
+        code: "VALIDATION_ERROR"
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    await PasswordResetToken.create({
+      token,
+      userId: user._id,
+      requestedByIp: req.ip
+    });
+
+    const resetUrl = FRONTEND_URL + "/reset-password.html?token=" + token;
+
+    // Fire and forget — never block the response on email delivery
+    sendEmail({
+      to: user.email,
+      subject: "Reset your DameCooper password",
+      text:
+        "Hello " + user.firstName + ",\n\n" +
+        "Someone requested a password reset for your DameCooper account.\n\n" +
+        "To choose a new password, open this link within the next hour:\n\n" +
+        resetUrl + "\n\n" +
+        "If you didn't request this, you can ignore this email — your password will not change.\n\n" +
+        "— DameCooper Institute",
+      html:
+        '<p>Hello ' + escapeHtml(user.firstName) + ',</p>' +
+        '<p>Someone requested a password reset for your DameCooper account.</p>' +
+        '<p><a href="' + resetUrl + '" style="background:#b69a59;color:#10243a;padding:12px 24px;text-decoration:none;border-radius:2px;font-weight:600;display:inline-block;">Choose a new password</a></p>' +
+        '<p style="color:#66717d;font-size:13px;">Or open this URL directly:<br>' + resetUrl + '</p>' +
+        '<p style="color:#66717d;font-size:13px;">This link expires in 1 hour. If you didn\'t request it, you can ignore this email.</p>' +
+        '<p style="color:#66717d;font-size:13px;">— DameCooper Institute</p>'
+    }).catch((err) =>
+      console.error("[email] Password reset send failed:", err.message)
+    );
+
+    res.json(genericResponse);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/api/auth/verify-reset-token", async (req, res, next) => {
+  try {
+    const { token } = req.body || {};
+    if (!token) {
+      return res.status(400).json({
+        message: "Token is required.",
+        code: "VALIDATION_ERROR"
+      });
+    }
+
+    const reset = await PasswordResetToken.findOne({ token });
+    if (!reset || reset.usedAt || (reset.expiresAt && reset.expiresAt < new Date())) {
+      return res.status(410).json({
+        message: "This reset link is invalid or has expired.",
+        code: "RESET_INVALID"
+      });
+    }
+
+    const user = await User.findById(reset.userId);
+    if (!user) {
+      return res.status(410).json({
+        message: "This reset link is invalid.",
+        code: "RESET_INVALID"
+      });
+    }
+
+    res.json({
+      ok: true,
+      user: { firstName: user.firstName, email: user.email }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/api/auth/reset-password", async (req, res, next) => {
+  try {
+    const { token, password } = req.body || {};
+
+    if (!token || !password) {
+      return res.status(400).json({
+        message: "Token and password are required.",
+        code: "VALIDATION_ERROR"
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters.",
+        code: "VALIDATION_ERROR"
+      });
+    }
+
+    const reset = await PasswordResetToken.findOne({ token });
+
+    if (!reset || reset.usedAt) {
+      return res.status(410).json({
+        message: "This reset link is invalid or has already been used.",
+        code: "RESET_INVALID"
+      });
+    }
+
+    if (reset.expiresAt && reset.expiresAt < new Date()) {
+      return res.status(410).json({
+        message: "This reset link has expired. Please request a new one.",
+        code: "RESET_EXPIRED"
+      });
+    }
+
+    const user = await User.findById(reset.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found.", code: "NOT_FOUND" });
+    }
+
+    user.passwordHash = await bcrypt.hash(password, 10);
+    await user.save();
+
+    reset.usedAt = new Date();
+    await reset.save();
+
+    res.json({ ok: true, loginId: user.loginId });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================================
+// STUDENT ROUTES
+// ============================================================
 
 app.get(
   "/api/student/profile",
@@ -424,35 +490,229 @@ app.get(
   "/api/student/grades",
   requireAuth,
   requireRole("student"),
-  (req, res) => res.json({ grades: GRADES })
+  async (req, res, next) => {
+    try {
+      const grades = await Grade.find({ studentId: req.user.sub })
+        .sort({ semester: -1, code: 1 });
+
+      res.json({
+        grades: grades.map((g) => g.toPublicJSON())
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+app.get(
+  "/api/student/attendance",
+  requireAuth,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const records = await Attendance.find({ studentId: req.user.sub })
+        .sort({ date: -1 })
+        .limit(200);
+
+      const total = records.length;
+      const present = records.filter(
+        (r) => r.status === "present" || r.status === "excused"
+      ).length;
+      const attendancePercent = total ? Math.round((present / total) * 100) : null;
+
+      // Per-course breakdown
+      const byCourse = {};
+      records.forEach((r) => {
+        if (!byCourse[r.courseCode]) {
+          byCourse[r.courseCode] = {
+            courseCode: r.courseCode,
+            courseTitle: r.courseTitle,
+            total: 0,
+            present: 0
+          };
+        }
+        byCourse[r.courseCode].total += 1;
+        if (r.status === "present" || r.status === "excused") {
+          byCourse[r.courseCode].present += 1;
+        }
+      });
+
+      const courses = Object.values(byCourse).map((c) => ({
+        ...c,
+        percent: c.total ? Math.round((c.present / c.total) * 100) : 0
+      }));
+
+      res.json({
+        attendancePercent,
+        total,
+        present,
+        courses,
+        records: records.slice(0, 50).map((r) => r.toPublicJSON())
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 app.get(
   "/api/student/timetable",
   requireAuth,
   requireRole("student"),
-  (req, res) => res.json({ days: TIMETABLE })
+  async (req, res, next) => {
+    try {
+      const sessions = await ClassSession.find({ studentId: req.user.sub })
+        .sort({ dayOfWeek: 1, startTime: 1 });
+
+      const days = {};
+      weekOrder().forEach((d) => { days[d] = []; });
+
+      sessions.forEach((s) => {
+        const pub = s.toPublicJSON();
+        if (days[s.dayOfWeek]) {
+          days[s.dayOfWeek].push({
+            time: pub.time,
+            title: pub.title,
+            room: pub.room,
+            lecturer: pub.lecturer
+          });
+        }
+      });
+
+      Object.keys(days).forEach((d) => {
+        if (!days[d].length) delete days[d];
+      });
+
+      res.json({ days });
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 app.get(
   "/api/student/fees",
   requireAuth,
   requireRole("student"),
-  (req, res) => res.json(FEES)
+  async (req, res, next) => {
+    try {
+      const invoices = await Invoice.find({ studentId: req.user.sub })
+        .sort({ dueDate: -1 });
+
+      const items = invoices.map((i) => i.toPublicJSON());
+
+      const currency = items[0] ? items[0].currency : "NZD";
+      const total = items
+        .filter((i) => i.status !== "waived")
+        .reduce((sum, i) => sum + i.amount, 0);
+      const paid = items
+        .filter((i) => i.status === "paid")
+        .reduce((sum, i) => sum + i.amount, 0);
+      const outstanding = total - paid;
+
+      res.json({ currency, total, paid, outstanding, items });
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 app.get(
   "/api/student/announcements",
   requireAuth,
-  requireRole("student"),
-  (req, res) => res.json({ announcements: ANNOUNCEMENTS })
+  requireRole("student", "staff", "admin"),
+  async (req, res, next) => {
+    try {
+      const now = new Date();
+      const announcements = await Announcement.find({
+        $or: [
+          { expiresAt: null },
+          { expiresAt: { $gt: now } }
+        ]
+      }).sort({ publishedAt: -1 }).limit(50);
+
+      res.json({
+        announcements: announcements.map((a) => a.toPublicJSON())
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 app.get(
   "/api/student/documents",
   requireAuth,
   requireRole("student"),
-  (req, res) => res.json({ documents: DOCUMENTS })
+  async (req, res, next) => {
+    try {
+      const docs = await Document.find({ studentId: req.user.sub })
+        .sort({ updatedAt: -1 });
+
+      res.json({
+        documents: docs.map((d) => d.toPublicJSON())
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+app.get(
+  "/api/student/documents/:id/download",
+  requireAuth,
+  requireRole("student"),
+  async (req, res, next) => {
+    try {
+      const doc = await Document.findById(req.params.id);
+
+      if (!doc) {
+        return res.status(404).json({
+          message: "Document not found.",
+          code: "NOT_FOUND"
+        });
+      }
+
+      // Ownership check — students can only download their own documents
+      if (doc.studentId.toString() !== req.user.sub) {
+        return res.status(403).json({
+          message: "You do not have access to this document.",
+          code: "FORBIDDEN"
+        });
+      }
+
+      if (!storage.fileExists(doc.studentId, doc.storageKey)) {
+        return res.status(410).json({
+          message: "This document is no longer available.",
+          code: "FILE_MISSING"
+        });
+      }
+
+      res.setHeader("Content-Type", doc.mimeType || "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="' +
+          doc.name.replace(/"/g, "") +
+          "." +
+          (doc.type || "pdf").toLowerCase() +
+          '"'
+      );
+
+      const stream = storage.streamDocument(doc.studentId, doc.storageKey);
+      stream.on("error", (err) => {
+        console.error("[download] Stream error:", err.message);
+        if (!res.headersSent) {
+          res.status(500).json({
+            message: "Could not read the file.",
+            code: "SERVER_ERROR"
+          });
+        }
+      });
+      stream.pipe(res);
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 app.get(
@@ -461,23 +721,72 @@ app.get(
   requireRole("student"),
   async (req, res, next) => {
     try {
-      const user = await User.findById(req.user.sub);
+      const studentId = req.user.sub;
+
+      const [user, grades, invoices, announcements, todaySessions, attendance] =
+        await Promise.all([
+          User.findById(studentId),
+          Grade.find({ studentId }),
+          Invoice.find({ studentId }),
+          Announcement.find({
+            $or: [
+              { expiresAt: null },
+              { expiresAt: { $gt: new Date() } }
+            ]
+          }).sort({ publishedAt: -1 }).limit(3),
+          ClassSession.find({ studentId, dayOfWeek: todayName() }).sort({ startTime: 1 }),
+          Attendance.find({ studentId })
+        ]);
+
       if (!user) {
         return res.status(404).json({ message: "User not found.", code: "NOT_FOUND" });
       }
-      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      const today = dayNames[new Date().getDay()];
+
+      // Compute GPA from points (simple average, one decimal place)
+      const gpa = grades.length
+        ? (grades.reduce((sum, g) => sum + g.points, 0) / grades.length).toFixed(1)
+        : "—";
+
+      // Credits earned this calendar year
+      const thisYear = new Date().getFullYear();
+      const creditsThisYear = grades
+        .filter((g) => g.publishedAt && g.publishedAt.getFullYear() === thisYear)
+        .reduce((sum, g) => sum + g.credits, 0);
+
+      const outstandingFees = invoices
+        .filter((i) => i.status !== "paid" && i.status !== "waived")
+        .reduce((sum, i) => sum + i.amount, 0);
+
+      const currency = invoices[0] ? invoices[0].currency : "NZD";
+
+      // Real attendance percent — null when there are no records yet
+      let attendancePercent = null;
+      if (attendance.length) {
+        const present = attendance.filter(
+          (a) => a.status === "present" || a.status === "excused"
+        ).length;
+        attendancePercent = Math.round((present / attendance.length) * 100);
+      }
+
       res.json({
         student: user.toPublicJSON(),
         stats: {
-          gpa: "7.2",
-          creditsThisYear: 90,
-          outstandingFees: FEES.outstanding,
-          currency: FEES.currency,
-          attendancePercent: 94,
+          gpa,
+          creditsThisYear,
+          outstandingFees,
+          currency,
+          attendancePercent
         },
-        announcements: ANNOUNCEMENTS.slice(0, 3),
-        todayClasses: TIMETABLE[today] || [],
+        announcements: announcements.map((a) => a.toPublicJSON()),
+        todayClasses: todaySessions.map((s) => {
+          const pub = s.toPublicJSON();
+          return {
+            time: pub.time,
+            title: pub.title,
+            room: pub.room,
+            lecturer: pub.lecturer
+          };
+        })
       });
     } catch (err) {
       next(err);
@@ -488,7 +797,6 @@ app.get(
 // ============================================================
 // STAFF ROUTES
 // ============================================================
-
 app.get(
   "/api/staff/profile",
   requireAuth,
@@ -506,10 +814,122 @@ app.get(
   }
 );
 
+// ------------------------------------------------------------
+// STAFF — attendance marking
+// ------------------------------------------------------------
+app.post(
+  "/api/staff/attendance",
+  requireAuth,
+  requireRole("staff", "admin"),
+  async (req, res, next) => {
+    try {
+      const { studentId, courseCode, courseTitle, date, status, notes } = req.body || {};
+
+      if (!studentId || !courseCode || !courseTitle || !date || !status) {
+        return res.status(400).json({
+          message: "studentId, courseCode, courseTitle, date, and status are required.",
+          code: "VALIDATION_ERROR"
+        });
+      }
+
+      if (!["present", "absent", "late", "excused"].includes(status)) {
+        return res.status(400).json({
+          message: "status must be one of: present, absent, late, excused.",
+          code: "VALIDATION_ERROR"
+        });
+      }
+
+      const student = await User.findById(studentId);
+      if (!student || student.role !== "student") {
+        return res.status(404).json({
+          message: "Student not found.",
+          code: "NOT_FOUND"
+        });
+      }
+
+      // Normalize to midnight UTC so we don't create duplicates at different times
+      const d = new Date(date);
+      d.setUTCHours(0, 0, 0, 0);
+
+      const record = await Attendance.findOneAndUpdate(
+        { studentId, courseCode: courseCode.toUpperCase(), date: d },
+        {
+          studentId,
+          courseCode: courseCode.toUpperCase(),
+          courseTitle,
+          date: d,
+          status,
+          notes,
+          markedBy: req.user.sub
+        },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
+
+      res.status(201).json(record.toPublicJSON());
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+app.post(
+  "/api/staff/attendance/bulk",
+  requireAuth,
+  requireRole("staff", "admin"),
+  async (req, res, next) => {
+    try {
+      const { courseCode, courseTitle, date, records } = req.body || {};
+
+      if (!courseCode || !courseTitle || !date || !Array.isArray(records)) {
+        return res.status(400).json({
+          message: "courseCode, courseTitle, date, and records[] are required.",
+          code: "VALIDATION_ERROR"
+        });
+      }
+
+      const d = new Date(date);
+      d.setUTCHours(0, 0, 0, 0);
+
+      const operations = records
+        .filter((r) => r.studentId && r.status)
+        .map((r) => ({
+          updateOne: {
+            filter: {
+              studentId: r.studentId,
+              courseCode: courseCode.toUpperCase(),
+              date: d
+            },
+            update: {
+              $set: {
+                studentId: r.studentId,
+                courseCode: courseCode.toUpperCase(),
+                courseTitle,
+                date: d,
+                status: r.status,
+                notes: r.notes || null,
+                markedBy: req.user.sub
+              }
+            },
+            upsert: true
+          }
+        }));
+
+      const result = await Attendance.bulkWrite(operations);
+
+      res.json({
+        ok: true,
+        matched: result.matchedCount,
+        upserted: result.upsertedCount
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // ============================================================
 // ADMIN ROUTES — user management
 // ============================================================
-
 app.get(
   "/api/admin/users",
   requireAuth,
@@ -517,21 +937,19 @@ app.get(
   async (req, res, next) => {
     try {
       const users = await User.find().sort({ createdAt: -1 });
-
       const list = users.map((u) => {
         const pub = u.toPublicJSON();
         return {
           ...pub,
           lastLogin: u.lastLoginAt
             ? u.lastLoginAt.toISOString().slice(0, 16).replace("T", " ")
-            : "—",
+            : "—"
         };
       });
 
-      // Add pending invitations as pseudo-users
       const invites = await Invitation.find({
         acceptedAt: null,
-        expiresAt: { $gt: new Date() },
+        expiresAt: { $gt: new Date() }
       }).sort({ createdAt: -1 });
 
       for (const inv of invites) {
@@ -544,11 +962,35 @@ app.get(
           initials: (inv.firstName[0] || "") + (inv.lastName[0] || ""),
           email: inv.email,
           status: "pending",
-          lastLogin: "—",
+          lastLogin: "—"
         });
       }
 
       res.json({ users: list });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+app.get(
+  "/api/admin/stats",
+  requireAuth,
+  requireRole("admin"),
+  async (req, res, next) => {
+    try {
+      const [total, students, staff, admins, pendingInvites] = await Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ role: "student", status: "active" }),
+        User.countDocuments({ role: "staff", status: "active" }),
+        User.countDocuments({ role: "admin", status: "active" }),
+        Invitation.countDocuments({
+          acceptedAt: null,
+          expiresAt: { $gt: new Date() }
+        })
+      ]);
+
+      res.json({ total, students, staff, admins, pendingInvites });
     } catch (err) {
       next(err);
     }
@@ -566,46 +1008,45 @@ app.post(
       if (!firstName || !lastName || !email || !loginId || !role) {
         return res.status(400).json({
           message: "First name, last name, email, login ID, and role are required.",
-          code: "VALIDATION_ERROR",
+          code: "VALIDATION_ERROR"
         });
       }
 
       if (!["student", "staff", "admin"].includes(role)) {
         return res.status(400).json({
           message: "Role must be one of: student, staff, admin.",
-          code: "VALIDATION_ERROR",
+          code: "VALIDATION_ERROR"
         });
       }
 
       if (role === "admin" && !adminConfirm) {
         return res.status(400).json({
           message: "Creating an administrator requires a confirmation code.",
-          code: "ADMIN_CONFIRM_REQUIRED",
+          code: "ADMIN_CONFIRM_REQUIRED"
         });
       }
 
       const normalizedLogin = loginId.trim().toUpperCase();
       const normalizedEmail = email.toLowerCase().trim();
 
-      // Duplicate checks — against both users and open invitations
       const existingUser = await User.findOne({
-        $or: [{ loginId: normalizedLogin }, { email: normalizedEmail }],
+        $or: [{ loginId: normalizedLogin }, { email: normalizedEmail }]
       });
       if (existingUser) {
         return res.status(409).json({
           message: "That login ID or email address is already in use.",
-          code: "DUPLICATE",
+          code: "DUPLICATE"
         });
       }
 
       const existingInvite = await Invitation.findOne({
         acceptedAt: null,
-        $or: [{ loginId: normalizedLogin }, { email: normalizedEmail }],
+        $or: [{ loginId: normalizedLogin }, { email: normalizedEmail }]
       });
       if (existingInvite) {
         return res.status(409).json({
           message: "An invitation is already pending for that login ID or email.",
-          code: "INVITE_PENDING",
+          code: "INVITE_PENDING"
         });
       }
 
@@ -618,14 +1059,12 @@ app.post(
         loginId: normalizedLogin,
         role,
         programme: programme || null,
-        createdBy: req.user.sub,
+        createdBy: req.user.sub
       });
 
       const inviteUrl =
-        (process.env.FRONTEND_URL || "https://damecooperinstitute.com") +
-        "/accept-invite.html?token=" + token;
+        FRONTEND_URL + "/accept-invite.html?token=" + token;
 
-      // In production, replace this with a real email send.
       console.log("[admin] Invitation created for " + normalizedEmail + " → " + inviteUrl);
 
       res.status(201).json({
@@ -636,9 +1075,9 @@ app.post(
           firstName: invite.firstName,
           lastName: invite.lastName,
           email: invite.email,
-          status: "pending",
+          status: "pending"
         },
-        inviteUrl, // remove when email sending is wired
+        inviteUrl
       });
     } catch (err) {
       next(err);
@@ -656,17 +1095,15 @@ app.post(
       if (!invite || invite.acceptedAt) {
         return res.status(404).json({
           message: "Invitation not found or already accepted.",
-          code: "NOT_FOUND",
+          code: "NOT_FOUND"
         });
       }
 
-      // Extend the expiry
       invite.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       await invite.save();
 
       const inviteUrl =
-        (process.env.FRONTEND_URL || "https://damecooperinstitute.com") +
-        "/accept-invite.html?token=" + invite.token;
+        FRONTEND_URL + "/accept-invite.html?token=" + invite.token;
 
       console.log("[admin] Invitation resent to " + invite.email + " → " + inviteUrl);
 
@@ -683,7 +1120,6 @@ app.patch(
   requireRole("admin"),
   async (req, res, next) => {
     try {
-      // First try as a real user
       const user = await User.findById(req.params.id);
       if (user) {
         user.status = user.status === "suspended" ? "active" : "suspended";
@@ -691,7 +1127,6 @@ app.patch(
         return res.json(user.toPublicJSON());
       }
 
-      // Otherwise treat it as an invitation cancellation
       const invite = await Invitation.findById(req.params.id);
       if (invite) {
         invite.acceptedAt = invite.acceptedAt ? null : new Date();
@@ -707,16 +1142,15 @@ app.patch(
 );
 
 // ============================================================
-// INVITATION ROUTES — used by accept-invite.html
+// INVITATION ROUTES
 // ============================================================
-
 app.post("/api/invitations/verify", async (req, res, next) => {
   try {
     const { token } = req.body || {};
     if (!token) {
       return res.status(400).json({
         message: "Invitation token is required.",
-        code: "VALIDATION_ERROR",
+        code: "VALIDATION_ERROR"
       });
     }
 
@@ -725,14 +1159,14 @@ app.post("/api/invitations/verify", async (req, res, next) => {
     if (!invite || invite.acceptedAt) {
       return res.status(410).json({
         message: "This invitation link is invalid or has already been used.",
-        code: "INVITE_INVALID",
+        code: "INVITE_INVALID"
       });
     }
 
     if (invite.expiresAt && invite.expiresAt < new Date()) {
       return res.status(410).json({
         message: "This invitation link has expired. Please ask for a new one.",
-        code: "INVITE_EXPIRED",
+        code: "INVITE_EXPIRED"
       });
     }
 
@@ -742,8 +1176,8 @@ app.post("/api/invitations/verify", async (req, res, next) => {
         lastName: invite.lastName,
         loginId: invite.loginId,
         email: invite.email,
-        role: invite.role,
-      },
+        role: invite.role
+      }
     });
   } catch (err) {
     next(err);
@@ -756,13 +1190,13 @@ app.post("/api/invitations/accept", async (req, res, next) => {
     if (!token || !password) {
       return res.status(400).json({
         message: "Token and password are required.",
-        code: "VALIDATION_ERROR",
+        code: "VALIDATION_ERROR"
       });
     }
     if (password.length < 8) {
       return res.status(400).json({
         message: "Password must be at least 8 characters.",
-        code: "VALIDATION_ERROR",
+        code: "VALIDATION_ERROR"
       });
     }
 
@@ -771,27 +1205,26 @@ app.post("/api/invitations/accept", async (req, res, next) => {
     if (!invite || invite.acceptedAt) {
       return res.status(410).json({
         message: "This invitation link is invalid or has already been used.",
-        code: "INVITE_INVALID",
+        code: "INVITE_INVALID"
       });
     }
 
     if (invite.expiresAt && invite.expiresAt < new Date()) {
       return res.status(410).json({
         message: "This invitation link has expired. Please ask for a new one.",
-        code: "INVITE_EXPIRED",
+        code: "INVITE_EXPIRED"
       });
     }
 
-    // Prevent a race where someone else created the account in the meantime
     const existing = await User.findOne({
-      $or: [{ loginId: invite.loginId }, { email: invite.email }],
+      $or: [{ loginId: invite.loginId }, { email: invite.email }]
     });
     if (existing) {
       invite.acceptedAt = new Date();
       await invite.save();
       return res.status(409).json({
         message: "An account with that login ID or email already exists.",
-        code: "DUPLICATE",
+        code: "DUPLICATE"
       });
     }
 
@@ -805,7 +1238,7 @@ app.post("/api/invitations/accept", async (req, res, next) => {
       email: invite.email,
       programme: invite.programme || null,
       status: "active",
-      passwordHash,
+      passwordHash
     });
 
     invite.acceptedAt = new Date();
@@ -820,11 +1253,10 @@ app.post("/api/invitations/accept", async (req, res, next) => {
 // ============================================================
 // 404 + ERROR HANDLERS
 // ============================================================
-
 app.use((req, res) => {
   res.status(404).json({
     message: "Not found: " + req.method + " " + req.originalUrl,
-    code: "NOT_FOUND",
+    code: "NOT_FOUND"
   });
 });
 
@@ -832,58 +1264,40 @@ app.use((err, req, res, next) => {
   console.error("[error]", err.message);
 
   if (err.message && err.message.startsWith("Not allowed by CORS")) {
-    return res.status(403).json({
-      message: err.message,
-      code: "CORS_BLOCKED",
-    });
+    return res.status(403).json({ message: err.message, code: "CORS_BLOCKED" });
   }
 
   if (err.name === "ValidationError") {
     return res.status(400).json({
       message: "Validation failed.",
       code: "VALIDATION_ERROR",
-      details: Object.keys(err.errors || {}),
+      details: Object.keys(err.errors || {})
     });
   }
 
   if (err.code === 11000) {
     return res.status(409).json({
       message: "A record with that value already exists.",
-      code: "DUPLICATE",
+      code: "DUPLICATE"
     });
   }
 
   res.status(500).json({
     message: "An unexpected server error occurred.",
-    code: "SERVER_ERROR",
+    code: "SERVER_ERROR"
   });
 });
 
 // ============================================================
-// START — connect to MongoDB first, then listen
+// START
 // ============================================================
-
 async function start() {
-  if (!MONGODB_URI) {
-    console.error("[start] MONGODB_URI is not set. Aborting.");
-    process.exit(1);
-  }
-
   try {
-    console.log("[start] Connecting to MongoDB…");
-    await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-    });
-    console.log("[start] MongoDB connected:", mongoose.connection.name);
-
+    await connectDb();
     app.listen(PORT, () => {
       console.log(
-        "DameCooper Institute API listening on port " +
-          PORT +
-          " (" +
-          (process.env.NODE_ENV || "development") +
-          ")"
+        "DameCooper Institute API listening on port " + PORT +
+        " (" + (process.env.NODE_ENV || "development") + ")"
       );
     });
   } catch (err) {

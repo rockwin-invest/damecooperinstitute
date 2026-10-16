@@ -2,1535 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- Primary meta -->
   <title>Student Portal | DameCooper Institute</title>
-  <meta name="description" content="Sign in to the DameCooper Institute student portal to view your profile, grades, timetable, fees, and announcements." />
+  <meta
+    name="description"
+    content="DameCooper Institute student portal — view your profile, grades, attendance, timetable, fees, announcements, and academic documents."
+  />
   <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#10243a" />
+  <meta name="color-scheme" content="light" />
   <link rel="canonical" href="https://damecooperinstitute.com/student-portal.html" />
 
+  <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
-  <!-- Fonts -->
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-  <style>
-    /* ============================================
-       DESIGN TOKENS (shared with public site)
-       ============================================ */
-    :root {
-      --navy: #10243a;
-      --navy-deep: #091827;
-      --navy-mid: #1a3554;
-      --gold: #b69a59;
-      --gold-dark: #987b40;
-      --gold-light: #d4bc85;
-      --ivory: #f7f5ef;
-      --white: #ffffff;
-      --text-main: #202a35;
-      --text-secondary: #66717d;
-      --neutral: #edf1f5;
-      --success: #2e7d5b;
-      --success-bg: #e8f4ee;
-      --warning: #b87333;
-      --warning-bg: #fdf3e7;
-      --danger: #b23a3a;
-      --danger-bg: #fbeaea;
-      --info: #315c76;
-      --info-bg: #e8f0f6;
-
-      --border-thin: rgba(16, 36, 58, 0.08);
-      --border-gold: rgba(182, 154, 89, 0.35);
-
-      --font-serif: "Playfair Display", Georgia, serif;
-      --font-sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
-      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      --radius: 2px;
-
-      --sidebar-w: 260px;
-      --header-h: 68px;
-
-      --space-1: 8px;
-      --space-2: 16px;
-      --space-3: 24px;
-      --space-4: 32px;
-      --space-5: 48px;
-    }
-
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html { -webkit-text-size-adjust: 100%; }
-
-    body {
-      font-family: var(--font-sans);
-      background-color: var(--ivory);
-      color: var(--text-main);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      min-height: 100vh;
-    }
-
-    h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
-    p { color: var(--text-secondary); }
-    a { text-decoration: none; color: inherit; }
-    button { font-family: inherit; cursor: pointer; border: none; background: none; }
-    img { max-width: 100%; display: block; }
-
-    a:focus-visible,
-    button:focus-visible,
-    input:focus-visible,
-    select:focus-visible,
-    textarea:focus-visible {
-      outline: 2px solid var(--gold);
-      outline-offset: 2px;
-      border-radius: var(--radius);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    /* ============================================
-       UTILITY
-       ============================================ */
-    .visually-hidden {
-      position: absolute;
-      width: 1px; height: 1px;
-      padding: 0; margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* ============================================
-       LOGIN VIEW
-       ============================================ */
-    .login-view {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(182, 154, 89, 0.12), transparent 45%),
-        radial-gradient(circle at 80% 80%, rgba(49, 92, 118, 0.15), transparent 40%),
-        linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .login-view::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M0 0 L60 60 M60 0 L0 60' stroke='%23b69a59' stroke-width='0.3' stroke-opacity='0.06'/></svg>");
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    .login-inner {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      max-width: 1280px;
-      width: 100%;
-      margin: auto;
-      min-height: 100vh;
-    }
-
-    /* Left panel — brand story */
-    .login-brand {
-      padding: var(--space-5) var(--space-4);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      color: var(--white);
-      position: relative;
-    }
-
-    .login-brand-top {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-mark-lg {
-      width: 56px; height: 56px;
-      display: flex; align-items: center; justify-content: center;
-      background-color: transparent;
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      font-family: var(--font-serif);
-      font-weight: 700;
-      font-size: 1.25rem;
-      letter-spacing: 0.02em;
-      border-radius: var(--radius);
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .brand-mark-lg::after {
-      content: "";
-      position: absolute;
-      inset: 4px;
-      border: 1px solid rgba(182, 154, 89, 0.35);
-      border-radius: 1px;
-    }
-
-    .brand-mark-lg + .brand-text strong {
-      display: block;
-      font-family: var(--font-serif);
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--white);
-      line-height: 1.1;
-    }
-    .brand-mark-lg + .brand-text span {
-      display: block;
-      font-size: 0.6875rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.55);
-      margin-top: 4px;
-    }
-
-    .login-brand-body {
-      max-width: 460px;
-    }
-
-    .login-brand-body .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--gold-light);
-      margin-bottom: var(--space-3);
-    }
-
-    .login-brand-body .eyebrow::before {
-      content: "";
-      width: 32px; height: 1px;
-      background-color: var(--gold);
-    }
-
-    .login-brand-body h1 {
-      font-size: clamp(2rem, 3.5vw, 3rem);
-      color: var(--white);
-      margin-bottom: var(--space-3);
-      line-height: 1.1;
-    }
-
-    .login-brand-body h1 em {
-      font-style: italic;
-      color: var(--gold-light);
-      font-weight: 500;
-    }
-
-    .login-brand-body p {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 1rem;
-      line-height: 1.75;
-      max-width: 400px;
-    }
-
-    .login-brand-foot {
-      font-size: 0.8125rem;
-      color: rgba(255, 255, 255, 0.45);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .login-brand-foot a {
-      color: rgba(255, 255, 255, 0.65);
-    }
-    .login-brand-foot a:hover { color: var(--gold-light); }
-
-    /* Right panel — form */
-    .login-panel {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: var(--space-5) var(--space-4);
-    }
-
-    .login-card {
-      background-color: var(--white);
-      width: 100%;
-      max-width: 440px;
-      padding: var(--space-5);
-      border-radius: var(--radius);
-      box-shadow: 0 40px 80px -20px rgba(9, 24, 39, 0.35);
-      position: relative;
-    }
-
-    .login-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0;
-      width: 64px; height: 4px;
-      background-color: var(--gold);
-    }
-
-    .login-card h2 {
-      font-size: 1.75rem;
-      color: var(--navy);
-      margin-bottom: 8px;
-    }
-
-    .login-card > p {
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
-      margin-bottom: var(--space-4);
-      line-height: 1.6;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: var(--space-3);
-    }
-
-    .field label {
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--navy);
-      letter-spacing: 0.02em;
-    }
-
-    .field label .req { color: var(--gold-dark); }
-
-    .field-input {
-      position: relative;
-    }
-
-    .field-input input {
-      font-family: inherit;
-      font-size: 0.9375rem;
-      color: var(--text-main);
-      background-color: var(--white);
-      border: 1px solid rgba(16, 36, 58, 0.14);
-      border-radius: var(--radius);
-      padding: 13px 44px 13px 14px;
-      width: 100%;
-      transition: var(--transition);
-    }
-
-    .field-input input:focus {
-      border-color: var(--gold);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(182, 154, 89, 0.14);
-    }
-
-    .field-input i {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-      pointer-events: none;
-    }
-
-    .field-toggle {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 32px; height: 32px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-secondary);
-      border-radius: var(--radius);
-      transition: var(--transition);
-    }
-
-    .field-toggle:hover { color: var(--navy); background-color: var(--neutral); }
-
-    .login-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: var(--space-4);
-      font-size: 0.8125rem;
-    }
-
-    .login-row label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-secondary);
-      cursor: pointer;
-    }
-
-    .login-row input[type="checkbox"] {
-      accent-color: var(--gold-dark);
-      width: 16px; height: 16px;
-      cursor: pointer;
-    }
-
-    .login-row a { color: var(--gold-dark); font-weight: 500; }
-    .login-row a:hover { color: var(--navy); text-decoration: underline; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 15px 24px;
-      font-family: inherit;
-      font-size: 0.9375rem;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      border-radius: var(--radius);
-      transition: var(--transition);
-      cursor: pointer;
-      border: 1px solid transparent;
-      white-space: nowrap;
-    }
-
-    .btn-gold {
-      background-color: var(--gold);
-      color: var(--navy-deep);
-    }
-    .btn-gold:hover:not(:disabled) {
-      background-color: var(--gold-dark);
-      color: var(--white);
-    }
-
-    .btn-navy {
-      background-color: var(--navy);
-      color: var(--white);
-    }
-    .btn-navy:hover:not(:disabled) { background-color: var(--navy-deep); }
-
-    .btn-ghost {
-      background-color: transparent;
-      color: var(--navy);
-      border-color: var(--border-gold);
-    }
-    .btn-ghost:hover:not(:disabled) {
-      background-color: var(--navy);
-      color: var(--white);
-      border-color: var(--navy);
-    }
-
-    .btn-block { width: 100%; }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .btn i.fa-circle-notch { animation: spin 0.9s linear infinite; }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Auth message */
-    .auth-message {
-      display: none;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 14px 16px;
-      border-radius: var(--radius);
-      font-size: 0.8125rem;
-      line-height: 1.55;
-      margin-bottom: var(--space-3);
-    }
-
-    .auth-message.show { display: flex; }
-    .auth-message i { flex-shrink: 0; margin-top: 2px; font-size: 0.875rem; }
-
-    .auth-message.error {
-      background-color: var(--danger-bg);
-      color: var(--danger);
-      border-left: 3px solid var(--danger);
-    }
-
-    .auth-message.success {
-      background-color: var(--success-bg);
-      color: var(--success);
-      border-left: 3px solid var(--success);
-    }
-
-    .auth-message.info {
-      background-color: var(--info-bg);
-      color: var(--info);
-      border-left: 3px solid var(--info);
-    }
-
-    /* Login footer */
-    .login-hint {
-      margin-top: var(--space-4);
-      padding-top: var(--space-3);
-      border-top: 1px solid var(--border-thin);
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-
-    .login-hint strong { color: var(--navy); }
-
-    .login-hint code {
-      background-color: var(--neutral);
-      padding: 2px 6px;
-      border-radius: var(--radius);
-      font-family: "Courier New", monospace;
-      font-size: 0.75rem;
-      color: var(--navy);
-    }
-
-    /* ============================================
-       PORTAL VIEW
-       ============================================ */
-    .portal-view {
-      display: none;
-      min-height: 100vh;
-      grid-template-columns: var(--sidebar-w) 1fr;
-      grid-template-rows: var(--header-h) 1fr;
-      grid-template-areas:
-        "sidebar header"
-        "sidebar main";
-    }
-
-    .portal-view.active { display: grid; }
-
-    /* Portal header */
-    .portal-header {
-      grid-area: header;
-      background-color: var(--white);
-      border-bottom: 1px solid var(--border-thin);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-3);
-      padding: 0 var(--space-4);
-      position: sticky;
-      top: 0;
-      z-index: 40;
-    }
-
-    .portal-header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      min-width: 0;
-    }
-
-    .menu-btn {
-      display: none;
-      width: 40px; height: 40px;
-      align-items: center;
-      justify-content: center;
-      color: var(--navy);
-      border-radius: var(--radius);
-      font-size: 1.125rem;
-    }
-    .menu-btn:hover { background-color: var(--neutral); }
-
-    .portal-page-title {
-      font-family: var(--font-serif);
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--navy);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .portal-header-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .header-icon-btn {
-      position: relative;
-      width: 40px; height: 40px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--navy);
-      border-radius: var(--radius);
-      font-size: 1rem;
-      transition: var(--transition);
-    }
-    .header-icon-btn:hover { background-color: var(--neutral); }
-
-    .header-icon-btn .badge {
-      position: absolute;
-      top: 6px; right: 6px;
-      min-width: 16px; height: 16px;
-      background-color: var(--gold);
-      color: var(--navy-deep);
-      border-radius: 8px;
-      font-size: 0.625rem;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-      border: 2px solid var(--white);
-    }
-
-    .user-chip {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 14px 6px 6px;
-      border-radius: 24px;
-      transition: var(--transition);
-      border: 1px solid transparent;
-    }
-    .user-chip:hover { background-color: var(--ivory); border-color: var(--border-thin); }
-
-    .user-avatar {
-      width: 32px; height: 32px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background-color: var(--navy);
-      color: var(--gold);
-      border-radius: 50%;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .user-meta { display: flex; flex-direction: column; line-height: 1.2; }
-    .user-meta strong { font-size: 0.8125rem; font-weight: 600; color: var(--navy); }
-    .user-meta span { font-size: 0.6875rem; color: var(--text-secondary); }
-
-    /* Portal sidebar */
-    .portal-sidebar {
-      grid-area: sidebar;
-      background-color: var(--navy-deep);
-      color: rgba(255, 255, 255, 0.75);
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-    }
-
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 18px 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      color: var(--white);
-      flex-shrink: 0;
-      min-height: var(--header-h);
-    }
-
-    .sidebar-brand .brand-mark {
-      width: 36px; height: 36px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background-color: transparent;
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      font-family: var(--font-serif);
-      font-weight: 700;
-      font-size: 0.875rem;
-      border-radius: var(--radius);
-      flex-shrink: 0;
-    }
-
-    .sidebar-brand-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.15;
-      min-width: 0;
-    }
-
-    .sidebar-brand-text strong {
-      font-family: var(--font-serif);
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: var(--white);
-    }
-    .sidebar-brand-text span {
-      font-size: 0.625rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.5);
-      margin-top: 3px;
-    }
-
-    .sidebar-nav {
-      flex: 1;
-      padding: 16px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .sidebar-label {
-      font-size: 0.625rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.35);
-      padding: 16px 12px 8px;
-    }
-
-    .sidebar-nav a {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 12px;
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.72);
-      position: relative;
-      transition: var(--transition);
-      cursor: pointer;
-    }
-
-    .sidebar-nav a:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-      color: var(--white);
-    }
-
-    .sidebar-nav a.active {
-      background-color: rgba(182, 154, 89, 0.12);
-      color: var(--gold-light);
-    }
-
-    .sidebar-nav a.active::before {
-      content: "";
-      position: absolute;
-      left: -12px;
-      top: 8px;
-      bottom: 8px;
-      width: 3px;
-      background-color: var(--gold);
-      border-radius: 0 2px 2px 0;
-    }
-
-    .sidebar-nav a i {
-      width: 18px;
-      text-align: center;
-      font-size: 0.875rem;
-      flex-shrink: 0;
-    }
-
-    .sidebar-nav a .nav-badge {
-      margin-left: auto;
-      font-size: 0.625rem;
-      font-weight: 700;
-      background-color: var(--gold);
-      color: var(--navy-deep);
-      padding: 2px 8px;
-      border-radius: 10px;
-      min-width: 20px;
-      text-align: center;
-    }
-
-    .sidebar-foot {
-      padding: 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      flex-shrink: 0;
-    }
-
-    .sidebar-help {
-      background-color: rgba(255, 255, 255, 0.04);
-      border-radius: var(--radius);
-      padding: 14px;
-      font-size: 0.75rem;
-      line-height: 1.55;
-      color: rgba(255, 255, 255, 0.65);
-    }
-
-    .sidebar-help strong {
-      display: block;
-      color: var(--white);
-      font-size: 0.8125rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .sidebar-help a {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--gold-light);
-      font-weight: 600;
-      margin-top: 8px;
-      font-size: 0.75rem;
-    }
-
-    .sidebar-help a:hover { color: var(--gold); }
-
-    /* Portal main */
-    .portal-main {
-      grid-area: main;
-      padding: var(--space-4);
-      overflow-y: auto;
-      min-width: 0;
-    }
-
-    .portal-section { display: none; }
-    .portal-section.active { display: block; }
-
-    /* Page header */
-    .page-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: var(--space-3);
-      margin-bottom: var(--space-4);
-      flex-wrap: wrap;
-    }
-
-    .page-header-text { flex: 1; min-width: 240px; }
-
-    .page-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--gold-dark);
-      margin-bottom: 10px;
-    }
-
-    .page-eyebrow::before {
-      content: "";
-      width: 24px; height: 1px;
-      background-color: var(--gold);
-    }
-
-    .page-header h2 {
-      font-size: clamp(1.5rem, 2.5vw, 2rem);
-      color: var(--navy);
-      margin-bottom: 6px;
-      line-height: 1.2;
-    }
-
-    .page-header p {
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
-      max-width: 620px;
-      line-height: 1.65;
-    }
-
-    /* Cards */
-    .card {
-      background-color: var(--white);
-      border: 1px solid var(--border-thin);
-      border-radius: var(--radius);
-      padding: var(--space-3);
-      transition: var(--transition);
-    }
-
-    .card-gold-top { position: relative; overflow: hidden; }
-    .card-gold-top::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0;
-      width: 48px; height: 3px;
-      background-color: var(--gold);
-    }
-
-    /* Stat grid */
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: var(--space-2);
-      margin-bottom: var(--space-4);
-    }
-
-    .stat-card {
-      background-color: var(--white);
-      border: 1px solid var(--border-thin);
-      border-radius: var(--radius);
-      padding: var(--space-3);
-      position: relative;
-      overflow: hidden;
-      transition: var(--transition);
-    }
-
-    .stat-card:hover {
-      border-color: var(--border-gold);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 24px -12px rgba(16, 36, 58, 0.12);
-    }
-
-    .stat-icon {
-      width: 40px; height: 40px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background-color: var(--ivory);
-      color: var(--gold-dark);
-      border-radius: var(--radius);
-      font-size: 1rem;
-      margin-bottom: 16px;
-    }
-
-    .stat-label {
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-    }
-
-    .stat-value {
-      font-family: var(--font-serif);
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: var(--navy);
-      line-height: 1.1;
-      letter-spacing: -0.01em;
-    }
-
-    .stat-delta {
-      font-size: 0.75rem;
-      color: var(--success);
-      margin-top: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-weight: 500;
-    }
-    .stat-delta.down { color: var(--danger); }
-    .stat-delta.neutral { color: var(--text-secondary); }
-
-    /* Content grid */
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: var(--space-3);
-    }
-
-    .content-card {
-      background-color: var(--white);
-      border: 1px solid var(--border-thin);
-      border-radius: var(--radius);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .content-card-head {
-      padding: 18px var(--space-3);
-      border-bottom: 1px solid var(--border-thin);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .content-card-head h3 {
-      font-size: 1.0625rem;
-      color: var(--navy);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .content-card-head h3 i { color: var(--gold-dark); font-size: 0.875rem; }
-
-    .content-card-head a {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--gold-dark);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .content-card-head a:hover { color: var(--navy); }
-
-    .content-card-body { padding: var(--space-3); flex: 1; }
-
-    /* Grades table */
-    .grade-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-    }
-
-    .grade-table th {
-      text-align: left;
-      font-family: var(--font-sans);
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border-thin);
-      background-color: var(--ivory);
-    }
-
-    .grade-table td {
-      padding: 14px 12px;
-      border-bottom: 1px solid var(--border-thin);
-      color: var(--text-main);
-      vertical-align: middle;
-    }
-
-    .grade-table tr:last-child td { border-bottom: none; }
-
-    .grade-table tr:hover td { background-color: rgba(182, 154, 89, 0.04); }
-
-    .grade-code {
-      font-family: "Courier New", monospace;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      display: block;
-      margin-top: 2px;
-    }
-
-    .grade-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 44px;
-      padding: 4px 10px;
-      border-radius: 2px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .grade-A { background-color: var(--success-bg); color: var(--success); }
-    .grade-B { background-color: var(--info-bg); color: var(--info); }
-    .grade-C { background-color: var(--warning-bg); color: var(--warning); }
-    .grade-D, .grade-F { background-color: var(--danger-bg); color: var(--danger); }
-
-    /* Announcements */
-    .announcement-list {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .announcement {
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border-thin);
-      display: flex;
-      gap: 14px;
-    }
-
-    .announcement:first-child { padding-top: 0; }
-    .announcement:last-child { border-bottom: none; padding-bottom: 0; }
-
-    .announcement-icon {
-      flex-shrink: 0;
-      width: 36px; height: 36px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background-color: var(--ivory);
-      color: var(--gold-dark);
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-    }
-
-    .announcement-body { flex: 1; min-width: 0; }
-
-    .announcement-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
-
-    .announcement-meta .tag {
-      color: var(--gold-dark);
-    }
-
-    .announcement h4 {
-      font-family: var(--font-sans);
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: var(--navy);
-      margin-bottom: 4px;
-      line-height: 1.4;
-    }
-
-    .announcement p {
-      font-size: 0.8125rem;
-      line-height: 1.6;
-      color: var(--text-secondary);
-    }
-
-    /* Timetable */
-    .timetable-day {
-      margin-bottom: var(--space-4);
-    }
-
-    .timetable-day:last-child { margin-bottom: 0; }
-
-    .timetable-day h4 {
-      font-family: var(--font-sans);
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--gold-dark);
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border-thin);
-    }
-
-    .class-slot {
-      display: grid;
-      grid-template-columns: 92px 1fr auto;
-      gap: 16px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border-thin);
-      align-items: center;
-    }
-
-    .class-slot:last-child { border-bottom: none; }
-
-    .class-time {
-      font-family: "Courier New", monospace;
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .class-info h5 {
-      font-family: var(--font-sans);
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: var(--navy);
-      margin-bottom: 2px;
-    }
-
-    .class-info span {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-
-    .class-room {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--gold-dark);
-      padding: 4px 10px;
-      background-color: var(--ivory);
-      border-radius: var(--radius);
-      white-space: nowrap;
-    }
-
-    /* Fees */
-    .fee-summary {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-2);
-      margin-bottom: var(--space-3);
-    }
-
-    .fee-box {
-      background-color: var(--ivory);
-      padding: var(--space-3);
-      border-radius: var(--radius);
-      border-left: 3px solid var(--gold);
-    }
-
-    .fee-box.paid { border-left-color: var(--success); }
-    .fee-box.due { border-left-color: var(--warning); }
-
-    .fee-box-label {
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-
-    .fee-box-value {
-      font-family: var(--font-serif);
-      font-size: 1.625rem;
-      font-weight: 600;
-      color: var(--navy);
-      line-height: 1.1;
-    }
-
-    .fee-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-    }
-
-    .fee-table th, .fee-table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border-thin);
-    }
-
-    .fee-table th {
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      background-color: var(--ivory);
-    }
-
-    .fee-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 12px;
-    }
-
-    .fee-status.paid { background-color: var(--success-bg); color: var(--success); }
-    .fee-status.due { background-color: var(--warning-bg); color: var(--warning); }
-
-    /* Documents */
-    .doc-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: var(--space-2);
-    }
-
-    .doc-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 16px;
-      background-color: var(--white);
-      border: 1px solid var(--border-thin);
-      border-radius: var(--radius);
-      transition: var(--transition);
-      cursor: pointer;
-    }
-
-    .doc-card:hover {
-      border-color: var(--border-gold);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 24px -12px rgba(16, 36, 58, 0.1);
-    }
-
-    .doc-icon {
-      flex-shrink: 0;
-      width: 44px; height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background-color: var(--ivory);
-      color: var(--gold-dark);
-      border-radius: var(--radius);
-      font-size: 1.125rem;
-    }
-
-    .doc-meta { min-width: 0; flex: 1; }
-    .doc-meta strong {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--navy);
-      line-height: 1.3;
-      margin-bottom: 2px;
-    }
-    .doc-meta span { font-size: 0.75rem; color: var(--text-secondary); }
-
-    /* Loading skeleton */
-    .skeleton {
-      background: linear-gradient(90deg, var(--neutral) 0%, #e2e7ee 50%, var(--neutral) 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.6s ease-in-out infinite;
-      border-radius: var(--radius);
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    .skeleton-line { height: 14px; margin-bottom: 8px; }
-    .skeleton-line.w60 { width: 60%; }
-    .skeleton-line.w80 { width: 80%; }
-    .skeleton-line.w40 { width: 40%; }
-
-    /* Empty/error state */
-    .state-block {
-      text-align: center;
-      padding: var(--space-4) var(--space-3);
-    }
-
-    .state-block i {
-      font-size: 2rem;
-      color: var(--gold);
-      margin-bottom: 16px;
-      display: block;
-    }
-
-    .state-block h4 {
-      font-size: 1.0625rem;
-      color: var(--navy);
-      margin-bottom: 6px;
-    }
-
-    .state-block p {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      max-width: 360px;
-      margin: 0 auto;
-    }
-
-    /* Toast */
-    .toast-stack {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 2000;
-      max-width: 340px;
-      pointer-events: none;
-    }
-
-    .toast {
-      background-color: var(--navy-deep);
-      color: var(--white);
-      padding: 14px 16px;
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      line-height: 1.5;
-      box-shadow: 0 16px 40px rgba(9, 24, 39, 0.3);
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      border-left: 3px solid var(--gold);
-      pointer-events: auto;
-      animation: toastIn 0.3s ease;
-    }
-
-    @keyframes toastIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .toast.success { border-left-color: var(--success); }
-    .toast.error { border-left-color: var(--danger); }
-
-    .toast i { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
-    .toast.success i { color: #4caf86; }
-    .toast.error i { color: #e87b7b; }
-
-    /* Mobile drawer */
-    .drawer-overlay {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(9, 24, 39, 0.5);
-      opacity: 0;
-      visibility: hidden;
-      transition: var(--transition);
-      z-index: 100;
-      backdrop-filter: blur(2px);
-    }
-    .drawer-overlay.active { opacity: 1; visibility: visible; }
-
-    /* ============================================
-       RESPONSIVE
-       ============================================ */
-    @media (max-width: 1024px) {
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .content-grid { grid-template-columns: 1fr; }
-      .fee-summary { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 900px) {
-      .login-inner { grid-template-columns: 1fr; }
-      .login-brand { padding: var(--space-3) var(--space-3) 0; min-height: auto; }
-      .login-brand-body { padding: var(--space-4) 0; }
-      .login-brand-foot { padding-bottom: var(--space-3); }
-      .login-panel { padding: var(--space-3); }
-
-      .portal-view {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-          "header"
-          "main";
-      }
-      .portal-sidebar {
-        position: fixed;
-        top: 0; left: 0;
-        width: min(280px, 82vw);
-        height: 100vh;
-        transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 200;
-      }
-      .portal-sidebar.open { transform: translateX(0); }
-      .menu-btn { display: inline-flex; }
-      .portal-main { padding: var(--space-3); }
-    }
-
-    @media (max-width: 640px) {
-      :root { --header-h: 60px; }
-      .portal-header { padding: 0 16px; }
-      .user-meta { display: none; }
-      .user-chip { padding: 4px; }
-      .stat-grid { grid-template-columns: 1fr; }
-      .page-header { flex-direction: column; align-items: stretch; }
-      .class-slot { grid-template-columns: 1fr; gap: 6px; }
-      .class-room { justify-self: start; }
-      .toast-stack { left: 16px; right: 16px; bottom: 16px; max-width: none; }
-      .login-brand { display: none; }
-      .login-view { padding: 20px 0; }
-    }
-  </style>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="preconnect" href="https://damecooperinstitute.onrender.com" crossorigin />
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Font Awesome (with SRI) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- Site styles -->
+  <link rel="stylesheet" href="student-portal.css" />
 </head>
 <body>
 
   <!-- ============================================
-       LOGIN VIEW
-       ============================================ -->
-  <div class="login-view" id="loginView">
-    <div class="login-inner">
-      <!-- Brand panel -->
-      <div class="login-brand">
-        <div class="login-brand-top">
-          <span class="brand-mark-lg" aria-hidden="true">DC</span>
-          <span class="brand-text">
-            <strong>DameCooper</strong>
-            <span>Institute of Higher Learning</span>
-          </span>
-        </div>
-
-        <div class="login-brand-body">
-          <p class="eyebrow">Student Portal</p>
-          <h1>Your studies, <em>all in one place</em>.</h1>
-          <p>
-            Sign in to view your profile, check your grades, access your
-            timetable, manage fees, and stay up to date with campus
-            announcements.
-          </p>
-        </div>
-
-        <div class="login-brand-foot">
-          <span>&copy; <span id="loginYear"></span> DameCooper Institute</span>
-          <span aria-hidden="true">·</span>
-          <a href="index.html">Back to homepage</a>
-        </div>
-      </div>
-
-      <!-- Form panel -->
-      <div class="login-panel">
-        <div class="login-card">
-          <h2>Welcome back</h2>
-          <p>Sign in with your admission number and password.</p>
-
-          <!-- Auth message -->
-          <div class="auth-message" id="authMessage" role="alert" aria-live="polite">
-            <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
-            <span id="authMessageText"></span>
-          </div>
-
-          <form id="loginForm" novalidate>
-            <div class="field">
-              <label for="admissionNo">
-                Admission number <span class="req">*</span>
-              </label>
-              <div class="field-input">
-                <input
-                  type="text"
-                  id="admissionNo"
-                  name="admissionNo"
-                  autocomplete="username"
-                  placeholder="e.g. DC/2025/001"
-                  required
-                  aria-describedby="admissionHelp"
-                />
-                <i class="fas fa-id-card" aria-hidden="true"></i>
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="password">
-                Password <span class="req">*</span>
-              </label>
-              <div class="field-input">
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  autocomplete="current-password"
-                  placeholder="Enter your password"
-                  required
-                />
-                <button
-                  type="button"
-                  class="field-toggle"
-                  id="togglePassword"
-                  aria-label="Show password"
-                >
-                  <i class="fas fa-eye" aria-hidden="true"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="login-row">
-              <label>
-                <input type="checkbox" id="rememberMe" name="rememberMe" />
-                Remember me
-              </label>
-              <a href="#" id="forgotLink">Forgot password?</a>
-            </div>
-
-            <button type="submit" class="btn btn-gold btn-block" id="loginBtn">
-              Sign In
-              <i class="fas fa-arrow-right" aria-hidden="true"></i>
-            </button>
-          </form>
-
-          <p class="login-hint">
-            <strong>Demo credentials</strong> — admission number
-            <code>DC/2025/001</code>, password <code>demo1234</code>.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================
        PORTAL VIEW
+       ------------------------------------------------------------
+       The portal is visible from load. A guard in student-portal.js
+       redirects unauthenticated visitors to signin.html, and
+       non-student roles to their own portals.
        ============================================ -->
-  <div class="portal-view" id="portalView">
+  <div class="portal-view active" id="portalView">
 
     <!-- Sidebar -->
     <aside class="portal-sidebar" id="portalSidebar" aria-label="Portal navigation">
@@ -1545,7 +67,7 @@
       <nav class="sidebar-nav">
         <span class="sidebar-label">Main</span>
 
-        <a href="#" class="nav-item active" data-section="dashboard">
+        <a href="#" class="nav-item active" data-section="dashboard" aria-current="page">
           <i class="fas fa-gauge-high" aria-hidden="true"></i>
           <span>Dashboard</span>
         </a>
@@ -1558,6 +80,11 @@
         <a href="#" class="nav-item" data-section="grades">
           <i class="fas fa-graduation-cap" aria-hidden="true"></i>
           <span>Grades</span>
+        </a>
+
+        <a href="#" class="nav-item" data-section="attendance">
+          <i class="fas fa-user-check" aria-hidden="true"></i>
+          <span>Attendance</span>
         </a>
 
         <a href="#" class="nav-item" data-section="timetable">
@@ -1575,7 +102,7 @@
         <a href="#" class="nav-item" data-section="announcements">
           <i class="fas fa-bullhorn" aria-hidden="true"></i>
           <span>Announcements</span>
-          <span class="nav-badge" id="announcementBadge">3</span>
+          <span class="nav-badge" id="announcementBadge" aria-hidden="true">—</span>
         </a>
 
         <a href="#" class="nav-item" data-section="documents">
@@ -1614,13 +141,13 @@
       <div class="portal-header-right">
         <button class="header-icon-btn" aria-label="Notifications">
           <i class="fas fa-bell" aria-hidden="true"></i>
-          <span class="badge" id="notifBadge">3</span>
+          <span class="badge" id="notifBadge" aria-hidden="true">—</span>
         </button>
 
         <button class="user-chip" id="userChip" aria-haspopup="true" aria-expanded="false">
-          <span class="user-avatar" id="userAvatar">SJ</span>
+          <span class="user-avatar" id="userAvatar" aria-hidden="true">--</span>
           <span class="user-meta">
-            <strong id="headerName">—</strong>
+            <strong id="headerName">Loading…</strong>
             <span id="headerAdm">—</span>
           </span>
         </button>
@@ -1637,7 +164,6 @@
       <!-- Dashboard -->
       <section class="portal-section active" id="section-dashboard" aria-labelledby="pageTitle">
         <div class="stat-grid" id="statGrid">
-          <!-- Populated by JS -->
           <div class="stat-card">
             <div class="skeleton" style="width:40px;height:40px;margin-bottom:16px;"></div>
             <div class="skeleton skeleton-line w60"></div>
@@ -1704,6 +230,10 @@
             <h2>My Profile</h2>
             <p>Your registered details as held by the Institute. Contact the registrar to update any information.</p>
           </div>
+          <button type="button" class="btn btn-outline-navy" id="changePasswordBtn">
+            <i class="fas fa-key" aria-hidden="true"></i>
+            Change password
+          </button>
         </div>
 
         <div class="content-card">
@@ -1739,6 +269,56 @@
             </h3>
           </div>
           <div class="content-card-body" id="gradesBody" style="padding:0;">
+            <div style="padding:24px;">
+              <div class="skeleton skeleton-line w80"></div>
+              <div class="skeleton skeleton-line w60"></div>
+              <div class="skeleton skeleton-line w40"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Attendance -->
+      <section class="portal-section" id="section-attendance">
+        <div class="page-header">
+          <div class="page-header-text">
+            <p class="page-eyebrow">Class Attendance</p>
+            <h2>Attendance</h2>
+            <p>Your class attendance record for the current academic year.</p>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="attendanceSummary">
+          <div class="stat-card">
+            <div class="skeleton" style="width:40px;height:40px;margin-bottom:16px;"></div>
+            <div class="skeleton skeleton-line w60"></div>
+            <div class="skeleton skeleton-line w40" style="height:24px;"></div>
+          </div>
+          <div class="stat-card">
+            <div class="skeleton" style="width:40px;height:40px;margin-bottom:16px;"></div>
+            <div class="skeleton skeleton-line w60"></div>
+            <div class="skeleton skeleton-line w40" style="height:24px;"></div>
+          </div>
+          <div class="stat-card">
+            <div class="skeleton" style="width:40px;height:40px;margin-bottom:16px;"></div>
+            <div class="skeleton skeleton-line w60"></div>
+            <div class="skeleton skeleton-line w40" style="height:24px;"></div>
+          </div>
+          <div class="stat-card">
+            <div class="skeleton" style="width:40px;height:40px;margin-bottom:16px;"></div>
+            <div class="skeleton skeleton-line w60"></div>
+            <div class="skeleton skeleton-line w40" style="height:24px;"></div>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <div class="content-card-head">
+            <h3>
+              <i class="fas fa-list-check" aria-hidden="true"></i>
+              Recent attendance
+            </h3>
+          </div>
+          <div class="content-card-body" id="attendanceBody" style="padding:0;">
             <div style="padding:24px;">
               <div class="skeleton skeleton-line w80"></div>
               <div class="skeleton skeleton-line w60"></div>
@@ -1822,913 +402,114 @@
     </main>
   </div>
 
+  <!-- ============================================
+       CHANGE PASSWORD MODAL
+       ============================================ -->
+  <div
+    class="modal-overlay"
+    id="changePasswordModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="changePasswordTitle"
+    aria-hidden="true"
+  >
+    <div class="modal">
+      <button
+        type="button"
+        class="modal-close"
+        id="changePasswordClose"
+        aria-label="Close dialog"
+      >
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+
+      <h3 id="changePasswordTitle">Change your password</h3>
+      <p>
+        Enter your current password, then choose a new one.
+        New passwords must be at least 8 characters.
+      </p>
+
+      <div
+        class="msg"
+        id="cpMessage"
+        role="alert"
+        aria-live="polite"
+        style="display:none;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:2px;font-size:0.8125rem;line-height:1.55;margin-bottom:18px;"
+      ></div>
+
+      <form id="changePasswordForm" novalidate>
+        <div class="field">
+          <label for="cpCurrent">
+            Current password <span class="req">*</span>
+          </label>
+          <span class="field-input">
+            <input
+              type="password"
+              id="cpCurrent"
+              name="cpCurrent"
+              autocomplete="current-password"
+              required
+            />
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="cpNew">
+            New password <span class="req">*</span>
+          </label>
+          <span class="field-input">
+            <input
+              type="password"
+              id="cpNew"
+              name="cpNew"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            />
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="cpConfirm">
+            Confirm new password <span class="req">*</span>
+          </label>
+          <span class="field-input">
+            <input
+              type="password"
+              id="cpConfirm"
+              name="cpConfirm"
+              autocomplete="new-password"
+              required
+            />
+          </span>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn-outline-navy"
+            id="changePasswordCancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-gold"
+            id="changePasswordSubmit"
+          >
+            Update password
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Mobile drawer overlay -->
   <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
 
   <!-- Toast stack -->
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
-  <script>
-  /* ============================================================
-     STUDENT PORTAL — CONFIGURATION
-     ============================================================
-     To go live, change USE_MOCK_API to false and point
-     API_BASE_URL at your backend. The API contract is documented
-     in the companion server.js reference file.
-     ============================================================ */
-  const CONFIG = {
-    USE_MOCK_API: true,
-    API_BASE_URL: "/api",
-    TOKEN_STORAGE_KEY: "dc_portal_token",
-    STUDENT_STORAGE_KEY: "dc_portal_student",
-    SESSION_TIMEOUT_MS: 1000 * 60 * 60 * 4 // 4 hours
-  };
-
-  /* ============================================================
-     API LAYER
-     ------------------------------------------------------------
-     Single point through which every request flows.
-     - When USE_MOCK_API is true, requests are routed to MOCK_API.
-     - When false, real fetch() calls are issued with the Bearer
-       token attached automatically.
-     ============================================================ */
-  const API = (function () {
-    function getToken() {
-      try {
-        const raw = localStorage.getItem(CONFIG.TOKEN_STORAGE_KEY);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (!parsed || !parsed.token) return null;
-        if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
-          localStorage.removeItem(CONFIG.TOKEN_STORAGE_KEY);
-          return null;
-        }
-        return parsed.token;
-      } catch {
-        return null;
-      }
-    }
-
-    function setToken(token) {
-      const payload = {
-        token,
-        expiresAt: Date.now() + CONFIG.SESSION_TIMEOUT_MS
-      };
-      localStorage.setItem(CONFIG.TOKEN_STORAGE_KEY, JSON.stringify(payload));
-    }
-
-    function clearToken() {
-      localStorage.removeItem(CONFIG.TOKEN_STORAGE_KEY);
-      localStorage.removeItem(CONFIG.STUDENT_STORAGE_KEY);
-    }
-
-    function getStoredStudent() {
-      try {
-        const raw = localStorage.getItem(CONFIG.STUDENT_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
-      }
-    }
-
-    function setStoredStudent(student) {
-      localStorage.setItem(CONFIG.STUDENT_STORAGE_KEY, JSON.stringify(student));
-    }
-
-    async function request(path, options) {
-      options = options || {};
-      const method = options.method || "GET";
-      const body = options.body || null;
-
-      if (CONFIG.USE_MOCK_API) {
-        return MOCK_API.handle(method, path, body, options);
-      }
-
-      const headers = Object.assign(
-        { "Content-Type": "application/json" },
-        options.headers || {}
-      );
-      const token = getToken();
-      if (token) headers.Authorization = "Bearer " + token;
-
-      const res = await fetch(CONFIG.API_BASE_URL + path, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined
-      });
-
-      let data = null;
-      try { data = await res.json(); } catch { /* empty */ }
-
-      if (!res.ok) {
-        const err = new Error((data && data.message) || "Request failed");
-        err.status = res.status;
-        err.code = data && data.code;
-        throw err;
-      }
-
-      return data;
-    }
-
-    return {
-      login: (admissionNo, password) =>
-        request("/auth/login", { method: "POST", body: { admissionNo, password } }),
-      logout: () => request("/auth/logout", { method: "POST" }),
-      getProfile: () => request("/student/profile"),
-      getGrades: () => request("/student/grades"),
-      getTimetable: () => request("/student/timetable"),
-      getFees: () => request("/student/fees"),
-      getAnnouncements: () => request("/student/announcements"),
-      getDocuments: () => request("/student/documents"),
-      getDashboard: () => request("/student/dashboard"),
-      getToken,
-      setToken,
-      clearToken,
-      getStoredStudent,
-      setStoredStudent
-    };
-  })();
-
-  /* ============================================================
-     MOCK API — used only when CONFIG.USE_MOCK_API === true.
-     Delete this whole block when switching to a real backend.
-     ============================================================ */
-  const MOCK_API = (function () {
-    const MOCK_USER = {
-      admissionNo: "DC/2025/001",
-      password: "demo1234",
-      student: {
-        id: "DC-2025-001",
-        admissionNo: "DC/2025/001",
-        firstName: "Sarah",
-        lastName: "Johnson",
-        initials: "SJ",
-        email: "sarah.johnson@student.damecooperinstitute.com",
-        phone: "+64 21 234 5678",
-        dateOfBirth: "2003-04-12",
-        nationality: "New Zealand",
-        programme: "BSc Computer Science",
-        programmeCode: "BSC-CS",
-        school: "School of Engineering",
-        level: "Undergraduate — Year 2",
-        studyMode: "On campus",
-        startDate: "2024-02-26",
-        expectedGraduation: "2027-11-30",
-        advisor: "Dr. James Aroha",
-        campus: "Dunedin Campus",
-        photo: null
-      }
-    };
-
-    const MOCK_GRADES = [
-      { code: "CS201", title: "Data Structures & Algorithms", credits: 20, grade: "A",  points: 8 },
-      { code: "CS210", title: "Operating Systems",             credits: 20, grade: "B+", points: 7 },
-      { code: "MATH201", title: "Linear Algebra",              credits: 15, grade: "A-", points: 7 },
-      { code: "CS220", title: "Database Systems",              credits: 20, grade: "A",  points: 8 },
-      { code: "ENG205", title: "Technical Communication",      credits: 15, grade: "B",  points: 6 }
-    ];
-
-    const MOCK_TIMETABLE = {
-      Monday: [
-        { time: "09:00 – 10:30", title: "Data Structures & Algorithms", room: "B-201", lecturer: "Dr. K. Ngata" },
-        { time: "11:00 – 12:30", title: "Operating Systems",            room: "B-105", lecturer: "Prof. L. Chen" },
-        { time: "14:00 – 15:30", title: "Linear Algebra",                room: "A-310", lecturer: "Dr. M. Reid" }
-      ],
-      Tuesday: [
-        { time: "10:00 – 11:30", title: "Database Systems",              room: "B-204", lecturer: "Dr. A. Patel" },
-        { time: "13:00 – 14:30", title: "Technical Communication",       room: "C-102", lecturer: "Ms. H. Walker" }
-      ],
-      Wednesday: [
-        { time: "09:00 – 10:30", title: "Data Structures & Algorithms", room: "B-201", lecturer: "Dr. K. Ngata" },
-        { time: "15:00 – 16:30", title: "Operating Systems (Lab)",       room: "Lab 3", lecturer: "Prof. L. Chen" }
-      ],
-      Thursday: [
-        { time: "09:00 – 10:30", title: "Database Systems",              room: "B-204", lecturer: "Dr. A. Patel" },
-        { time: "11:00 – 12:30", title: "Linear Algebra",                room: "A-310", lecturer: "Dr. M. Reid" }
-      ],
-      Friday: [
-        { time: "10:00 – 11:30", title: "Technical Communication",       room: "C-102", lecturer: "Ms. H. Walker" },
-        { time: "14:00 – 17:00", title: "Project Workshop",              room: "Lab 1", lecturer: "Dr. K. Ngata" }
-      ]
-    };
-
-    const MOCK_FEES = {
-      currency: "NZD",
-      total: 12800,
-      paid: 9600,
-      outstanding: 3200,
-      items: [
-        { id: "INV-2026-001", description: "Semester 1 tuition", amount: 6400, dueDate: "2026-02-20", status: "paid" },
-        { id: "INV-2026-002", description: "Student services levy", amount: 700,  dueDate: "2026-02-20", status: "paid" },
-        { id: "INV-2026-003", description: "Semester 2 tuition", amount: 5000, dueDate: "2026-07-15", status: "paid" },
-        { id: "INV-2026-004", description: "Semester 2 tuition — remainder", amount: 3200, dueDate: "2026-07-15", status: "due" }
-      ]
-    };
-
-    const MOCK_ANNOUNCEMENTS = [
-      { id: 1, tag: "Academic",  date: "2026-04-10", title: "Semester 1 results released", body: "Your Semester 1 results are now available in the Grades section of the portal.", priority: "high" },
-      { id: 2, tag: "Fees",      date: "2026-04-08", title: "Semester 2 payment reminder", body: "The remaining Semester 2 tuition balance is due by 15 July 2026.", priority: "medium" },
-      { id: 3, tag: "Campus",    date: "2026-04-02", title: "Library extended hours", body: "The campus library will remain open until 10:00 PM during the examination period.", priority: "low" },
-      { id: 4, tag: "Event",     date: "2026-03-28", title: "Careers Evening — 12 April", body: "Meet graduate employers from across New Zealand. Register via the Careers Services page.", priority: "medium" }
-    ];
-
-    const MOCK_DOCUMENTS = [
-      { id: "doc-1", name: "Enrolment confirmation letter", size: "142 KB", type: "PDF", updatedAt: "2026-02-26" },
-      { id: "doc-2", name: "Academic transcript",            size: "320 KB", type: "PDF", updatedAt: "2026-03-15" },
-      { id: "doc-3", name: "Fees statement — Semester 1",    size: "88 KB",  type: "PDF", updatedAt: "2026-02-22" },
-      { id: "doc-4", name: "Student ID card (reprint)",      size: "56 KB",  type: "PDF", updatedAt: "2025-08-10" },
-      { id: "doc-5", name: "Programme handbook 2026",        size: "1.2 MB", type: "PDF", updatedAt: "2026-01-15" }
-    ];
-
-    function delay(ms) {
-      return new Promise(function (r) { setTimeout(r, ms); });
-    }
-
-    async function handle(method, path, body) {
-      await delay(420 + Math.random() * 280);
-
-      // POST /auth/login
-      if (method === "POST" && path === "/auth/login") {
-        const { admissionNo, password } = body || {};
-        if (!admissionNo || !password) {
-          const err = new Error("Admission number and password are required.");
-          err.status = 400; err.code = "VALIDATION_ERROR"; throw err;
-        }
-        if (
-          admissionNo.trim().toUpperCase() !== MOCK_USER.admissionNo ||
-          password !== MOCK_USER.password
-        ) {
-          const err = new Error("The admission number or password you entered is incorrect.");
-          err.status = 401; err.code = "INVALID_CREDENTIALS"; throw err;
-        }
-        return {
-          token: "mock-" + Math.random().toString(36).slice(2) + Date.now().toString(36),
-          student: MOCK_USER.student
-        };
-      }
-
-      if (method === "POST" && path === "/auth/logout") {
-        return { ok: true };
-      }
-
-      // Ensure an authenticated session exists for the rest
-      if (!API.getToken()) {
-        const err = new Error("Your session has expired. Please sign in again.");
-        err.status = 401; err.code = "UNAUTHENTICATED"; throw err;
-      }
-
-      if (method === "GET" && path === "/student/profile")        return MOCK_USER.student;
-      if (method === "GET" && path === "/student/grades")         return { grades: MOCK_GRADES };
-      if (method === "GET" && path === "/student/timetable")      return { days: MOCK_TIMETABLE };
-      if (method === "GET" && path === "/student/fees")           return MOCK_FEES;
-      if (method === "GET" && path === "/student/announcements")  return { announcements: MOCK_ANNOUNCEMENTS };
-      if (method === "GET" && path === "/student/documents")      return { documents: MOCK_DOCUMENTS };
-
-      if (method === "GET" && path === "/student/dashboard") {
-        return {
-          stats: {
-            gpa: "7.2",
-            creditsThisYear: 90,
-            outstandingFees: MOCK_FEES.outstanding,
-            currency: MOCK_FEES.currency,
-            attendancePercent: 94
-          },
-          announcements: MOCK_ANNOUNCEMENTS.slice(0, 3),
-          todayClasses: getTodayClasses()
-        };
-      }
-
-      const err = new Error("Not found: " + method + " " + path);
-      err.status = 404; err.code = "NOT_FOUND"; throw err;
-    }
-
-    function getTodayClasses() {
-      const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      const today = dayNames[new Date().getDay()];
-      return MOCK_TIMETABLE[today] || [];
-    }
-
-    return { handle };
-  })();
-
-  /* ============================================================
-     APP — UI ORCHESTRATION
-     ============================================================ */
-  const App = (function () {
-    const state = {
-      student: null,
-      dashboard: null,
-      cache: { grades: null, timetable: null, fees: null, announcements: null, documents: null }
-    };
-
-    // ---- DOM refs
-    const el = {
-      loginView: document.getElementById("loginView"),
-      portalView: document.getElementById("portalView"),
-      loginForm: document.getElementById("loginForm"),
-      loginBtn: document.getElementById("loginBtn"),
-      admissionNo: document.getElementById("admissionNo"),
-      password: document.getElementById("password"),
-      togglePassword: document.getElementById("togglePassword"),
-      authMessage: document.getElementById("authMessage"),
-      authMessageText: document.getElementById("authMessageText"),
-      forgotLink: document.getElementById("forgotLink"),
-      logoutBtn: document.getElementById("logoutBtn"),
-      sidebar: document.getElementById("portalSidebar"),
-      drawerOverlay: document.getElementById("drawerOverlay"),
-      menuBtn: document.getElementById("menuBtn"),
-      navItems: document.querySelectorAll(".nav-item"),
-      sections: document.querySelectorAll(".portal-section"),
-      pageTitle: document.getElementById("pageTitle"),
-      headerName: document.getElementById("headerName"),
-      headerAdm: document.getElementById("headerAdm"),
-      userAvatar: document.getElementById("userAvatar"),
-      userChip: document.getElementById("userChip"),
-      toastStack: document.getElementById("toastStack"),
-      notifBadge: document.getElementById("notifBadge"),
-      announcementBadge: document.getElementById("announcementBadge"),
-      loginYear: document.getElementById("loginYear")
-    };
-
-    const SECTION_TITLES = {
-      dashboard: "Dashboard",
-      profile: "My Profile",
-      grades: "Grades",
-      timetable: "Timetable",
-      fees: "Fees & Payments",
-      announcements: "Announcements",
-      documents: "Documents"
-    };
-
-    // ---- Utility
-    function escapeHTML(str) {
-      return String(str == null ? "" : str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-    function toast(message, kind) {
-      kind = kind || "info";
-      const iconMap = { info: "fa-circle-info", success: "fa-circle-check", error: "fa-circle-exclamation" };
-      const node = document.createElement("div");
-      node.className = "toast " + kind;
-      node.innerHTML =
-        '<i class="fas ' + (iconMap[kind] || iconMap.info) + '" aria-hidden="true"></i>' +
-        '<span>' + escapeHTML(message) + '</span>';
-      el.toastStack.appendChild(node);
-      setTimeout(function () {
-        node.style.opacity = "0";
-        node.style.transform = "translateY(10px)";
-        node.style.transition = "all 0.3s ease";
-        setTimeout(function () { node.remove(); }, 300);
-      }, 4200);
-    }
-
-    function showAuthMessage(kind, text) {
-      el.authMessage.className = "auth-message show " + kind;
-      el.authMessageText.textContent = text;
-      const icon = el.authMessage.querySelector("i");
-      if (icon) {
-        icon.className = "fas " + (
-          kind === "error" ? "fa-circle-exclamation" :
-          kind === "success" ? "fa-circle-check" :
-          "fa-circle-info"
-        );
-      }
-    }
-
-    function clearAuthMessage() {
-      el.authMessage.className = "auth-message";
-      el.authMessageText.textContent = "";
-    }
-
-    function setLoading(button, loadingText) {
-      if (!button) return;
-      if (button.dataset.originalHtml === undefined) {
-        button.dataset.originalHtml = button.innerHTML;
-      }
-      if (loadingText) {
-        button.disabled = true;
-        button.innerHTML = escapeHTML(loadingText) + ' <i class="fas fa-circle-notch" aria-hidden="true"></i>';
-      } else {
-        button.disabled = false;
-        button.innerHTML = button.dataset.originalHtml;
-      }
-    }
-
-    // ---- Session boot
-    function boot() {
-      el.loginYear.textContent = new Date().getFullYear();
-
-      if (API.getToken()) {
-        const stored = API.getStoredStudent();
-        if (stored) {
-          state.student = stored;
-          enterPortal();
-          return;
-        }
-      }
-      showLogin();
-    }
-
-    function showLogin() {
-      el.portalView.classList.remove("active");
-      el.loginView.style.display = "";
-    }
-
-    function enterPortal() {
-      el.loginView.style.display = "none";
-      el.portalView.classList.add("active");
-      hydrateHeader();
-      loadDashboard();
-    }
-
-    function hydrateHeader() {
-      const s = state.student;
-      if (!s) return;
-      el.headerName.textContent = s.firstName + " " + s.lastName;
-      el.headerAdm.textContent = s.admissionNo;
-      el.userAvatar.textContent = s.initials || (s.firstName[0] + s.lastName[0]);
-    }
-
-    // ---- Login / logout
-    async function handleLogin(e) {
-      e.preventDefault();
-      clearAuthMessage();
-
-      const admissionNo = el.admissionNo.value.trim();
-      const password = el.password.value;
-
-      if (!admissionNo) {
-        showAuthMessage("error", "Please enter your admission number.");
-        el.admissionNo.focus();
-        return;
-      }
-      if (!password) {
-        showAuthMessage("error", "Please enter your password.");
-        el.password.focus();
-        return;
-      }
-
-      setLoading(el.loginBtn, "Signing in");
-
-      try {
-        const res = await API.login(admissionNo, password);
-        API.setToken(res.token);
-        API.setStoredStudent(res.student);
-        state.student = res.student;
-
-        showAuthMessage("success", "Welcome back, " + res.student.firstName + ".");
-        setTimeout(function () {
-          clearAuthMessage();
-          el.loginForm.reset();
-          enterPortal();
-        }, 400);
-      } catch (err) {
-        showAuthMessage("error", err.message || "Sign-in failed. Please try again.");
-        el.password.value = "";
-      } finally {
-        setLoading(el.loginBtn, null);
-      }
-    }
-
-    async function handleLogout() {
-      try { await API.logout(); } catch { /* ignore */ }
-      API.clearToken();
-      state.student = null;
-      state.cache = { grades: null, timetable: null, fees: null, announcements: null, documents: null };
-      el.loginView.style.display = "";
-      el.portalView.classList.remove("active");
-      toast("You have been signed out.", "info");
-    }
-
-    // ---- Section navigation
-    function showSection(sectionId) {
-      el.navItems.forEach(function (item) {
-        const isActive = item.dataset.section === sectionId;
-        item.classList.toggle("active", isActive);
-        item.setAttribute("aria-current", isActive ? "page" : "false");
-      });
-      el.sections.forEach(function (s) {
-        s.classList.toggle("active", s.id === "section-" + sectionId);
-      });
-      el.pageTitle.textContent = SECTION_TITLES[sectionId] || "Dashboard";
-      document.title = (SECTION_TITLES[sectionId] || "Dashboard") + " | DameCooper Student Portal";
-      closeDrawer();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-
-      loadSection(sectionId);
-    }
-
-    function loadSection(sectionId) {
-      if (sectionId === "dashboard")     loadDashboard();
-      if (sectionId === "profile")       loadProfile();
-      if (sectionId === "grades")        loadGrades();
-      if (sectionId === "timetable")     loadTimetable();
-      if (sectionId === "fees")          loadFees();
-      if (sectionId === "announcements") loadAnnouncements();
-      if (sectionId === "documents")     loadDocuments();
-    }
-
-    // ---- Loaders
-    async function loadDashboard() {
-      try {
-        if (!state.dashboard) {
-          state.dashboard = await API.getDashboard();
-        }
-        renderStats(state.dashboard.stats);
-        renderDashboardAnnouncements(state.dashboard.announcements);
-        renderDashboardToday(state.dashboard.todayClasses);
-        const unread = (state.dashboard.announcements || []).length;
-        if (el.notifBadge) el.notifBadge.textContent = String(unread);
-        if (el.announcementBadge) el.announcementBadge.textContent = String(unread);
-      } catch (err) {
-        handleApiError(err);
-      }
-    }
-
-    function renderStats(stats) {
-      const grid = document.getElementById("statGrid");
-      if (!grid) return;
-      grid.innerHTML =
-        statCard("fa-chart-line", "Current GPA", stats.gpa, "Up from 6.9 last semester") +
-        statCard("fa-book", "Credits this year", stats.creditsThisYear, "Across 5 courses") +
-        statCard("fa-receipt", "Outstanding fees", stats.currency + " " + Number(stats.outstandingFees).toLocaleString(), "Due by 15 July") +
-        statCard("fa-calendar-check", "Attendance", stats.attendancePercent + "%", "Excellent standing");
-    }
-
-    function statCard(icon, label, value, delta) {
-      return (
-        '<div class="stat-card">' +
-          '<div class="stat-icon"><i class="fas ' + icon + '" aria-hidden="true"></i></div>' +
-          '<div class="stat-label">' + escapeHTML(label) + '</div>' +
-          '<div class="stat-value">' + escapeHTML(value) + '</div>' +
-          (delta ? '<div class="stat-delta"><i class="fas fa-arrow-trend-up" aria-hidden="true"></i>' + escapeHTML(delta) + '</div>' : '') +
-        '</div>'
-      );
-    }
-
-    function renderDashboardAnnouncements(list) {
-      const body = document.getElementById("dashboardAnnouncements");
-      if (!body) return;
-      if (!list || !list.length) {
-        body.innerHTML = emptyState("fa-bullhorn", "No new announcements", "You're all caught up.");
-        return;
-      }
-      body.innerHTML = '<div class="announcement-list">' +
-        list.map(function (a) {
-          return (
-            '<div class="announcement">' +
-              '<span class="announcement-icon"><i class="fas fa-bullhorn" aria-hidden="true"></i></span>' +
-              '<div class="announcement-body">' +
-                '<div class="announcement-meta"><span class="tag">' + escapeHTML(a.tag) + '</span><span>' + escapeHTML(a.date) + '</span></div>' +
-                '<h4>' + escapeHTML(a.title) + '</h4>' +
-                '<p>' + escapeHTML(a.body) + '</p>' +
-              '</div>' +
-            '</div>'
-          );
-        }).join("") +
-      '</div>';
-    }
-
-    function renderDashboardToday(classes) {
-      const body = document.getElementById("dashboardToday");
-      if (!body) return;
-      if (!classes || !classes.length) {
-        body.innerHTML = emptyState("fa-mug-hot", "No classes today", "Enjoy the break — check your full timetable for the week.");
-        return;
-      }
-      body.innerHTML = classes.map(function (c) {
-        return (
-          '<div class="class-slot">' +
-            '<div class="class-time">' + escapeHTML(c.time) + '</div>' +
-            '<div class="class-info"><h5>' + escapeHTML(c.title) + '</h5><span>' + escapeHTML(c.lecturer || "") + '</span></div>' +
-            '<div class="class-room">' + escapeHTML(c.room) + '</div>' +
-          '</div>'
-        );
-      }).join("");
-    }
-
-    async function loadProfile() {
-      const body = document.getElementById("profileBody");
-      if (!body) return;
-      try {
-        const s = state.student || await API.getProfile();
-        state.student = s;
-        body.innerHTML =
-          '<div class="content-grid" style="gap:24px;">' +
-            fieldBlock("Full name", s.firstName + " " + s.lastName) +
-            fieldBlock("Admission number", s.admissionNo) +
-            fieldBlock("Email", s.email) +
-            fieldBlock("Phone", s.phone) +
-            fieldBlock("Date of birth", s.dateOfBirth) +
-            fieldBlock("Nationality", s.nationality) +
-            fieldBlock("Programme", s.programme + " (" + s.programmeCode + ")") +
-            fieldBlock("School", s.school) +
-            fieldBlock("Level", s.level) +
-            fieldBlock("Study mode", s.studyMode) +
-            fieldBlock("Academic advisor", s.advisor) +
-            fieldBlock("Campus", s.campus) +
-          '</div>';
-      } catch (err) {
-        body.innerHTML = errorState(err);
-      }
-    }
-
-    function fieldBlock(label, value) {
-      return (
-        '<div style="padding:14px 0;border-bottom:1px solid var(--border-thin);">' +
-          '<div style="font-size:0.6875rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:4px;">' +
-            escapeHTML(label) +
-          '</div>' +
-          '<div style="font-size:0.9375rem;color:var(--navy);font-weight:500;">' +
-            escapeHTML(value || "—") +
-          '</div>' +
-        '</div>'
-      );
-    }
-
-    async function loadGrades() {
-      const body = document.getElementById("gradesBody");
-      if (!body) return;
-      try {
-        if (!state.cache.grades) state.cache.grades = await API.getGrades();
-        const grades = state.cache.grades.grades || [];
-
-        if (!grades.length) {
-          body.innerHTML = emptyState("fa-graduation-cap", "No grades yet", "Your results will appear here once they are released.");
-          return;
-        }
-
-        body.innerHTML =
-          '<table class="grade-table">' +
-            '<thead><tr>' +
-              '<th>Course</th><th>Credits</th><th>Grade</th><th>Points</th>' +
-            '</tr></thead>' +
-            '<tbody>' +
-              grades.map(function (g) {
-                const letter = (g.grade || "").charAt(0).toUpperCase();
-                const cls = ["A","B","C","D","F"].includes(letter) ? "grade-" + letter : "grade-B";
-                return (
-                  '<tr>' +
-                    '<td><strong>' + escapeHTML(g.title) + '</strong><span class="grade-code">' + escapeHTML(g.code) + '</span></td>' +
-                    '<td>' + escapeHTML(g.credits) + '</td>' +
-                    '<td><span class="grade-badge ' + cls + '">' + escapeHTML(g.grade) + '</span></td>' +
-                    '<td>' + escapeHTML(g.points) + '</td>' +
-                  '</tr>'
-                );
-              }).join("") +
-            '</tbody>' +
-          '</table>';
-      } catch (err) {
-        body.innerHTML = errorState(err);
-      }
-    }
-
-    async function loadTimetable() {
-      const body = document.getElementById("timetableBody");
-      if (!body) return;
-      try {
-        if (!state.cache.timetable) state.cache.timetable = await API.getTimetable();
-        const days = state.cache.timetable.days || {};
-        const order = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        const html = order
-          .filter(function (d) { return days[d] && days[d].length; })
-          .map(function (d) {
-            return (
-              '<div class="timetable-day">' +
-                '<h4>' + escapeHTML(d) + '</h4>' +
-                days[d].map(function (c) {
-                  return (
-                    '<div class="class-slot">' +
-                      '<div class="class-time">' + escapeHTML(c.time) + '</div>' +
-                      '<div class="class-info"><h5>' + escapeHTML(c.title) + '</h5><span>' + escapeHTML(c.lecturer || "") + '</span></div>' +
-                      '<div class="class-room">' + escapeHTML(c.room) + '</div>' +
-                    '</div>'
-                  );
-                }).join("") +
-              '</div>'
-            );
-          }).join("");
-
-        body.innerHTML = html || emptyState("fa-calendar-days", "No timetable available", "Your schedule has not been published yet.");
-      } catch (err) {
-        body.innerHTML = errorState(err);
-      }
-    }
-
-    async function loadFees() {
-      const body = document.getElementById("feesBody");
-      if (!body) return;
-      try {
-        if (!state.cache.fees) state.cache.fees = await API.getFees();
-        const f = state.cache.fees;
-        const currency = f.currency || "NZD";
-
-        body.innerHTML =
-          '<div class="fee-summary">' +
-            '<div class="fee-box"><div class="fee-box-label">Total fees</div><div class="fee-box-value">' + currency + ' ' + Number(f.total).toLocaleString() + '</div></div>' +
-            '<div class="fee-box paid"><div class="fee-box-label">Paid to date</div><div class="fee-box-value">' + currency + ' ' + Number(f.paid).toLocaleString() + '</div></div>' +
-            '<div class="fee-box due"><div class="fee-box-label">Outstanding</div><div class="fee-box-value">' + currency + ' ' + Number(f.outstanding).toLocaleString() + '</div></div>' +
-          '</div>' +
-          '<div class="content-card">' +
-            '<div class="content-card-head"><h3><i class="fas fa-list" aria-hidden="true"></i> Fee statement</h3></div>' +
-            '<div style="padding:0;">' +
-              '<table class="fee-table">' +
-                '<thead><tr><th>Reference</th><th>Description</th><th>Amount</th><th>Due date</th><th>Status</th></tr></thead>' +
-                '<tbody>' +
-                  (f.items || []).map(function (item) {
-                    const cls = item.status === "paid" ? "paid" : "due";
-                    const label = item.status === "paid" ? "Paid" : "Due";
-                    return (
-                      '<tr>' +
-                        '<td>' + escapeHTML(item.id) + '</td>' +
-                        '<td>' + escapeHTML(item.description) + '</td>' +
-                        '<td>' + currency + ' ' + Number(item.amount).toLocaleString() + '</td>' +
-                        '<td>' + escapeHTML(item.dueDate) + '</td>' +
-                        '<td><span class="fee-status ' + cls + '"><i class="fas ' + (cls === "paid" ? "fa-check" : "fa-clock") + '" aria-hidden="true"></i>' + label + '</span></td>' +
-                      '</tr>'
-                    );
-                  }).join("") +
-                '</tbody>' +
-              '</table>' +
-            '</div>' +
-          '</div>';
-      } catch (err) {
-        body.innerHTML = errorState(err);
-      }
-    }
-
-    async function loadAnnouncements() {
-      const body = document.getElementById("announcementsBody");
-      if (!body) return;
-      try {
-        if (!state.cache.announcements) state.cache.announcements = await API.getAnnouncements();
-        const items = state.cache.announcements.announcements || [];
-        if (!items.length) {
-          body.innerHTML = emptyState("fa-bullhorn", "No announcements", "There are no announcements to display.");
-          return;
-        }
-        body.innerHTML = '<div class="announcement-list">' +
-          items.map(function (a) {
-            return (
-              '<div class="announcement">' +
-                '<span class="announcement-icon"><i class="fas fa-bullhorn" aria-hidden="true"></i></span>' +
-                '<div class="announcement-body">' +
-                  '<div class="announcement-meta"><span class="tag">' + escapeHTML(a.tag) + '</span><span>' + escapeHTML(a.date) + '</span></div>' +
-                  '<h4>' + escapeHTML(a.title) + '</h4>' +
-                  '<p>' + escapeHTML(a.body) + '</p>' +
-                '</div>' +
-              '</div>'
-            );
-          }).join("") +
-        '</div>';
-      } catch (err) {
-        body.innerHTML = errorState(err);
-      }
-    }
-
-    async function loadDocuments() {
-      const body = document.getElementById("documentsBody");
-      if (!body) return;
-      try {
-        if (!state.cache.documents) state.cache.documents = await API.getDocuments();
-        const items = state.cache.documents.documents || [];
-        if (!items.length) {
-          body.innerHTML = emptyState("fa-folder-open", "No documents", "There are no documents available for download yet.");
-          return;
-        }
-        body.innerHTML = items.map(function (d) {
-          return (
-            '<a class="doc-card" href="#" data-doc="' + escapeHTML(d.id) + '">' +
-              '<span class="doc-icon"><i class="fas fa-file-pdf" aria-hidden="true"></i></span>' +
-              '<span class="doc-meta"><strong>' + escapeHTML(d.name) + '</strong><span>' + escapeHTML(d.type) + ' · ' + escapeHTML(d.size) + ' · Updated ' + escapeHTML(d.updatedAt) + '</span></span>' +
-            '</a>'
-          );
-        }).join("");
-
-        body.querySelectorAll("[data-doc]").forEach(function (link) {
-          link.addEventListener("click", function (e) {
-            e.preventDefault();
-            toast("Download will be available once connected to the Institute document service.", "info");
-          });
-        });
-      } catch (err) {
-        body.innerHTML = errorState(err);
-      }
-    }
-
-    function emptyState(icon, title, text) {
-      return (
-        '<div class="state-block">' +
-          '<i class="fas ' + icon + '" aria-hidden="true"></i>' +
-          '<h4>' + escapeHTML(title) + '</h4>' +
-          '<p>' + escapeHTML(text) + '</p>' +
-        '</div>'
-      );
-    }
-
-    function errorState(err) {
-      return (
-        '<div class="state-block">' +
-          '<i class="fas fa-triangle-exclamation" aria-hidden="true"></i>' +
-          '<h4>We couldn\'t load this section</h4>' +
-          '<p>' + escapeHTML((err && err.message) || "Please try again in a moment.") + '</p>' +
-        '</div>'
-      );
-    }
-
-    function handleApiError(err) {
-      if (err && err.status === 401) {
-        API.clearToken();
-        state.student = null;
-        showLogin();
-        toast("Your session has expired. Please sign in again.", "error");
-        return;
-      }
-      toast((err && err.message) || "Something went wrong.", "error");
-    }
-
-    // ---- Drawer (mobile)
-    function openDrawer() {
-      el.sidebar.classList.add("open");
-      el.drawerOverlay.classList.add("active");
-      el.menuBtn.setAttribute("aria-expanded", "true");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeDrawer() {
-      el.sidebar.classList.remove("open");
-      el.drawerOverlay.classList.remove("active");
-      el.menuBtn.setAttribute("aria-expanded", "false");
-      document.body.style.overflow = "";
-    }
-
-    // ---- Wire up
-    function bind() {
-      el.loginForm.addEventListener("submit", handleLogin);
-
-      el.togglePassword.addEventListener("click", function () {
-        const isPassword = el.password.type === "password";
-        el.password.type = isPassword ? "text" : "password";
-        this.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
-        this.querySelector("i").className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
-        el.password.focus();
-      });
-
-      el.forgotLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        showAuthMessage("info", "Please contact student support on +64 3 479 8900 to reset your password.");
-      });
-
-      el.logoutBtn.addEventListener("click", handleLogout);
-
-      el.userChip.addEventListener("click", function (e) {
-        e.preventDefault();
-        showSection("profile");
-      });
-
-      el.navItems.forEach(function (item) {
-        item.addEventListener("click", function (e) {
-          e.preventDefault();
-          showSection(this.dataset.section);
-        });
-      });
-
-      document.querySelectorAll("[data-goto]").forEach(function (link) {
-        link.addEventListener("click", function (e) {
-          e.preventDefault();
-          showSection(this.dataset.goto);
-        });
-      });
-
-      el.menuBtn.addEventListener("click", openDrawer);
-      el.drawerOverlay.addEventListener("click", closeDrawer);
-
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") closeDrawer();
-      });
-
-      // Session-expiry check on focus
-      window.addEventListener("focus", function () {
-        if (state.student && !API.getToken()) {
-          handleApiError({ status: 401, message: "Session expired." });
-        }
-      });
-    }
-
-    function init() {
-      bind();
-      boot();
-    }
-
-    return { init };
-  })();
-
-  document.addEventListener("DOMContentLoaded", App.init);
-  </script>
+  <script src="student-portal.js"></script>
 </body>
 </html>

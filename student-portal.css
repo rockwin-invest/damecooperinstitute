@@ -1392,3 +1392,208 @@
       .login-brand { display: none; }
       .login-view { padding: 20px 0; }
     }
+    /* ============================================
+   MODAL — Change password dialog
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(9, 24, 39, 0.55);
+  backdrop-filter: blur(3px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: modalFadeIn 0.2s ease;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 32px 28px;
+  border-radius: 2px;
+  position: relative;
+  box-shadow: 0 32px 64px -16px rgba(9, 24, 39, 0.4);
+  animation: modalSlideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 4px;
+  background-color: #b69a59;
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #66717d;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+  font-size: 0.875rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: #10243a;
+  background-color: #edf1f5;
+}
+
+.modal h3 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.5rem;
+  color: #10243a;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.modal > p {
+  font-size: 0.875rem;
+  color: #66717d;
+  line-height: 1.65;
+  margin-bottom: 22px;
+}
+
+.modal .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.modal .field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #10243a;
+  letter-spacing: 0.02em;
+}
+
+.modal .field label .req {
+  color: #987b40;
+  margin-left: 2px;
+}
+
+.modal .field-input {
+  position: relative;
+  display: block;
+}
+
+.modal .field-input input {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: #202a35;
+  background-color: #ffffff;
+  border: 1px solid rgba(16, 36, 58, 0.16);
+  border-radius: 2px;
+  padding: 13px 14px;
+  width: 100%;
+  transition: all 0.25s ease;
+}
+
+.modal .field-input input:focus {
+  border-color: #b69a59;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(182, 154, 89, 0.16);
+}
+
+.modal .field-input input.invalid {
+  border-color: #b23a3a;
+}
+
+.modal .form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.modal .form-actions .btn {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.modal .form-actions .btn-gold {
+  background-color: #b69a59;
+  color: #091827;
+}
+
+.modal .form-actions .btn-gold:hover:not(:disabled) {
+  background-color: #987b40;
+  color: #ffffff;
+}
+
+.modal .form-actions .btn-outline-navy {
+  background-color: transparent;
+  color: #10243a;
+  border-color: rgba(182, 154, 89, 0.35);
+}
+
+.modal .form-actions .btn-outline-navy:hover:not(:disabled) {
+  background-color: #10243a;
+  color: #ffffff;
+  border-color: #10243a;
+}
+
+.modal .form-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal .form-actions .btn i.fa-circle-notch {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mobile modal tweaks */
+@media (max-width: 480px) {
+  .modal {
+    padding: 28px 22px 24px;
+  }
+  .modal h3 {
+    font-size: 1.25rem;
+  }
+  .modal .form-actions {
+    flex-direction: column-reverse;
+  }
+}
