@@ -164,11 +164,11 @@ const userSchema = new mongoose.Schema(
   { timestamps: true, collection: "users" }
 );
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", function () {
   if (!this.initials && this.firstName && this.lastName) {
     this.initials = (this.firstName[0] + this.lastName[0]).toUpperCase();
   }
-  next();
+  // No next() — Mongoose 8 treats sync functions as complete
 });
 
 userSchema.methods.toPublicJSON = function () {
