@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Portal | DameCooper Institute</title>
+  <meta name="description" content="DameCooper Institute staff portal — manage your courses, students, and grading." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #10243a; --navy-deep: #091827; --navy-mid: #1a3554;
+      --gold: #b69a59; --gold-dark: #987b40; --gold-light: #d4bc85;
+      --ivory: #f7f5ef; --white: #ffffff;
+      --text-main: #202a35; --text-secondary: #66717d; --neutral: #edf1f5;
+      --success: #2e7d5b; --success-bg: #e8f4ee;
+      --warning: #b87333; --warning-bg: #fdf3e7;
+      --danger: #b23a3a; --danger-bg: #fbeaea;
+      --info: #315c76; --info-bg: #e8f0f6;
+      --border-thin: rgba(16,36,58,0.08);
+      --border-gold: rgba(182,154,89,0.35);
+      --font-serif: "Playfair Display", Georgia, serif;
+      --font-sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius: 2px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-sans); color: var(--text-main); line-height: 1.6;
+      background-color: var(--ivory); -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+    h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+    p { color: var(--text-secondary); }
+    a { text-decoration: none; color: inherit; transition: var(--transition); }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--gold); outline-offset: 2px; border-radius: var(--radius);
+    }
+
+    .portal-shell {
+      display: grid; grid-template-columns: 260px 1fr;
+      grid-template-rows: 68px 1fr;
+      grid-template-areas: "sidebar header" "sidebar main";
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .portal-header {
+      grid-area: header; background-color: var(--white);
+      border-bottom: 1px solid var(--border-thin);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; padding: 0 32px; position: sticky; top: 0; z-index: 40;
+    }
+    .portal-header-left { display: flex; align-items: center; gap: 16px; }
+    .portal-header h1 { font-size: 1.125rem; color: var(--navy); font-weight: 600; }
+    .portal-header-right { display: flex; align-items: center; gap: 12px; }
+    .header-btn {
+      width: 40px; height: 40px; display: inline-flex; align-items: center;
+      justify-content: center; color: var(--navy); border-radius: var(--radius);
+      font-size: 1rem; transition: var(--transition); position: relative;
+    }
+    .header-btn:hover { background-color: var(--neutral); }
+    .header-btn .badge {
+      position: absolute; top: 6px; right: 6px;
+      min-width: 16px; height: 16px; background-color: var(--gold);
+      color: var(--navy-deep); border-radius: 8px; font-size: 0.625rem;
+      font-weight: 700; display: inline-flex; align-items: center;
+      justify-content: center; padding: 0 4px; border: 2px solid var(--white);
+    }
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 14px 6px 6px; border-radius: 24px;
+      transition: var(--transition); border: 1px solid transparent;
+    }
+    .user-chip:hover { background-color: var(--ivory); border-color: var(--border-thin); }
+    .user-avatar {
+      width: 32px; height: 32px; display: inline-flex; align-items: center;
+      justify-content: center; background-color: var(--navy); color: var(--gold);
+      border-radius: 50%; font-size: 0.75rem; font-weight: 700;
+    }
+    .user-meta { display: flex; flex-direction: column; line-height: 1.2; }
+    .user-meta strong { font-size: 0.8125rem; font-weight: 600; color: var(--navy); }
+    .user-meta span { font-size: 0.6875rem; color: var(--text-secondary); }
+
+    /* Sidebar */
+    .portal-sidebar {
+      grid-area: sidebar; background-color: var(--navy-deep);
+      color: rgba(255,255,255,0.75); display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 12px;
+      padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      min-height: 68px;
+    }
+    .sidebar-brand .mark {
+      width: 36px; height: 36px; display: inline-flex; align-items: center;
+      justify-content: center; border: 1px solid var(--gold); color: var(--gold);
+      font-family: var(--font-serif); font-weight: 700; font-size: 0.875rem;
+      border-radius: var(--radius); flex-shrink: 0;
+    }
+    .sidebar-brand-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+    .sidebar-brand-text strong { font-family: var(--font-serif); font-size: 0.9375rem; color: var(--white); }
+    .sidebar-brand-text span {
+      font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(255,255,255,0.5); margin-top: 3px;
+    }
+    .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-label {
+      font-size: 0.625rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      padding: 16px 12px 8px;
+    }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+      border-radius: var(--radius); font-size: 0.875rem; font-weight: 500;
+      color: rgba(255,255,255,0.72); position: relative;
+    }
+    .sidebar-nav a:hover { background-color: rgba(255,255,255,0.05); color: var(--white); }
+    .sidebar-nav a.active { background-color: rgba(182,154,89,0.12); color: var(--gold-light); }
+    .sidebar-nav a.active::before {
+      content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px;
+      width: 3px; background-color: var(--gold); border-radius: 0 2px 2px 0;
+    }
+    .sidebar-nav a i { width: 18px; text-align: center; font-size: 0.875rem; flex-shrink: 0; }
+    .sidebar-nav a .nav-badge {
+      margin-left: auto; font-size: 0.625rem; font-weight: 700;
+      background-color: var(--gold); color: var(--navy-deep);
+      padding: 2px 8px; border-radius: 10px; min-width: 20px; text-align: center;
+    }
+    .sidebar-foot {
+      padding: 16px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0;
+    }
+    .sidebar-help {
+      background-color: rgba(255,255,255,0.04); border-radius: var(--radius);
+      padding: 14px; font-size: 0.75rem; line-height: 1.55;
+      color: rgba(255,255,255,0.65);
+    }
+    .sidebar-help strong { display: block; color: var(--white); font-size: 0.8125rem; margin-bottom: 4px; }
+    .sidebar-help a {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--gold-light); font-weight: 600; margin-top: 8px; font-size: 0.75rem;
+    }
+
+    /* Main */
+    .portal-main { grid-area: main; padding: 32px; overflow-y: auto; min-width: 0; }
+
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 24px; margin-bottom: 32px; flex-wrap: wrap;
+    }
+    .page-header-text { flex: 1; min-width: 240px; }
+    .page-eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--gold-dark); margin-bottom: 10px;
+    }
+    .page-eyebrow::before { content: ""; width: 24px; height: 1px; background-color: var(--gold); }
+    .page-header h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); color: var(--navy); margin-bottom: 6px; }
+    .page-header p { font-size: 0.9375rem; color: var(--text-secondary); max-width: 620px; }
+
+    /* Stat cards */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-bottom: 32px;
+    }
+    .stat-card {
+      background-color: var(--white); border: 1px solid var(--border-thin);
+      border-radius: var(--radius); padding: 24px;
+      position: relative; overflow: hidden; transition: var(--transition);
+    }
+    .stat-card:hover {
+      border-color: var(--border-gold); transform: translateY(-2px);
+      box-shadow: 0 12px 24px -12px rgba(16,36,58,0.12);
+    }
+    .stat-icon {
+      width: 40px; height: 40px; display: inline-flex; align-items: center;
+      justify-content: center; background-color: var(--ivory); color: var(--gold-dark);
+      border-radius: var(--radius); font-size: 1rem; margin-bottom: 16px;
+    }
+    .stat-label {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px;
+    }
+    .stat-value {
+      font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600;
+      color: var(--navy); line-height: 1.1;
+    }
+    .stat-delta {
+      font-size: 0.75rem; color: var(--text-secondary);
+      margin-top: 4px; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .stat-delta.up { color: var(--success); }
+
+    /* Content grid */
+    .content-grid {
+      display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;
+    }
+    .content-card {
+      background-color: var(--white); border: 1px solid var(--border-thin);
+      border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;
+    }
+    .content-card-head {
+      padding: 18px 24px; border-bottom: 1px solid var(--border-thin);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .content-card-head h3 {
+      font-size: 1.0625rem; color: var(--navy); font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .content-card-head h3 i { color: var(--gold-dark); font-size: 0.875rem; }
+    .content-card-head a {
+      font-size: 0.75rem; font-weight: 600; color: var(--gold-dark);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .content-card-head a:hover { color: var(--navy); }
+    .content-card-body { padding: 24px; flex: 1; }
+    .content-card-body.flush { padding: 0; }
+
+    /* Table */
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    table.data-table th {
+      text-align: left; font-family: var(--font-sans); font-size: 0.6875rem;
+      font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-secondary); padding: 14px 20px;
+      border-bottom: 1px solid var(--border-thin); background-color: var(--ivory);
+    }
+    table.data-table td {
+      padding: 14px 20px; border-bottom: 1px solid var(--border-thin);
+      color: var(--text-main); vertical-align: middle;
+    }
+    table.data-table tr:last-child td { border-bottom: none; }
+    table.data-table tr:hover td { background-color: rgba(182,154,89,0.03); }
+
+    .course-code {
+      font-family: "Courier New", monospace; font-size: 0.75rem;
+      color: var(--text-secondary); display: block; margin-top: 2px;
+    }
+    .badge-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 0.6875rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .badge-info { background-color: var(--info-bg); color: var(--info); }
+    .badge-success { background-color: var(--success-bg); color: var(--success); }
+    .badge-warning { background-color: var(--warning-bg); color: var(--warning); }
+
+    /* Schedule list */
+    .schedule-list { display: flex; flex-direction: column; }
+    .schedule-item {
+      padding: 16px 0; border-bottom: 1px solid var(--border-thin);
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+    .schedule-item:first-child { padding-top: 0; }
+    .schedule-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .schedule-time {
+      flex-shrink: 0; font-family: "Courier New", monospace;
+      font-size: 0.8125rem; color: var(--gold-dark); font-weight: 600;
+      min-width: 90px;
+    }
+    .schedule-body { flex: 1; min-width: 0; }
+    .schedule-body h4 {
+      font-family: var(--font-sans); font-size: 0.9375rem;
+      font-weight: 600; color: var(--navy); margin-bottom: 2px;
+    }
+    .schedule-body span { font-size: 0.75rem; color: var(--text-secondary); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 56px 24px; }
+    .empty-state i { font-size: 2rem; color: var(--gold); margin-bottom: 16px; display: block; }
+    .empty-state h4 { font-size: 1.0625rem; color: var(--navy); margin-bottom: 6px; }
+    .empty-state p { font-size: 0.875rem; max-width: 360px; margin: 0 auto; }
+
+    /* Toast */
+    .toast-stack {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 2000; max-width: 340px; pointer-events: none;
+    }
+    .toast {
+      background-color: var(--navy-deep); color: var(--white);
+      padding: 14px 16px; border-radius: var(--radius);
+      font-size: 0.875rem; line-height: 1.5;
+      box-shadow: 0 16px 40px rgba(9,24,39,0.3);
+      display: flex; align-items: flex-start; gap: 12px;
+      border-left: 3px solid var(--gold); pointer-events: auto;
+      animation: toastIn 0.3s ease;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .toast i { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+
+    /* Mobile */
+    .menu-btn {
+      display: none; width: 40px; height: 40px;
+      align-items: center; justify-content: center;
+      color: var(--navy); border-radius: var(--radius); font-size: 1.125rem;
+    }
+    .menu-btn:hover { background-color: var(--neutral); }
+    .drawer-overlay {
+      position: fixed; inset: 0; background-color: rgba(9,24,39,0.5);
+      opacity: 0; visibility: hidden; transition: var(--transition);
+      z-index: 100; backdrop-filter: blur(2px);
+    }
+    .drawer-overlay.active { opacity: 1; visibility: visible; }
+
+    @media (max-width: 1024px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .content-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .portal-shell { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
+      .portal-sidebar {
+        position: fixed; top: 0; left: 0; width: min(280px, 82vw);
+        height: 100vh; transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200;
+      }
+      .portal-sidebar.open { transform: translateX(0); }
+      .menu-btn { display: inline-flex; }
+      .portal-main { padding: 20px; }
+      .portal-header { padding: 0 20px; }
+    }
+    @media (max-width: 640px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .user-meta { display: none; }
+      .user-chip { padding: 4px; }
+      .toast-stack { left: 16px; right: 16px; bottom: 16px; max-width: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="portal-shell">
+
+    <!-- ============================================
+         SIDEBAR
+         ============================================ -->
+    <aside class="portal-sidebar" id="sidebar" aria-label="Staff navigation">
+      <div class="sidebar-brand">
+        <span class="mark" aria-hidden="true">DC</span>
+        <span class="sidebar-brand-text">
+          <strong>DameCooper</strong>
+          <span>Staff Portal</span>
+        </span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="sidebar-label">Teaching</span>
+        <a href="#" class="active">
+          <i class="fas fa-gauge-high" aria-hidden="true"></i> Dashboard
+        </a>
+        <a href="#">
+          <i class="fas fa-book" aria-hidden="true"></i> My Courses
+        </a>
+        <a href="#">
+          <i class="fas fa-users" aria-hidden="true"></i> Students
+        </a>
+        <a href="#">
+          <i class="fas fa-clipboard-check" aria-hidden="true"></i> Gradebook
+        </a>
+
+        <span class="sidebar-label">Schedule</span>
+        <a href="#">
+          <i class="fas fa-calendar-days" aria-hidden="true"></i> Timetable
+        </a>
+        <a href="#">
+          <i class="fas fa-bullhorn" aria-hidden="true"></i> Announcements
+          <span class="nav-badge">2</span>
+        </a>
+
+        <span class="sidebar-label">Resources</span>
+        <a href="#">
+          <i class="fas fa-folder-open" aria-hidden="true"></i> Documents
+        </a>
+        <a href="#">
+          <i class="fas fa-gear" aria-hidden="true"></i> Preferences
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="sidebar-help">
+          <strong>Staff support</strong>
+          Contact the faculty office for help with teaching tools.
+          <a href="contacts.html">
+            Get in touch
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================================
+         HEADER
+         ============================================ -->
+    <header class="portal-header">
+      <div class="portal-header-left">
+        <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+        <h1>Staff Dashboard</h1>
+      </div>
+      <div class="portal-header-right">
+        <button class="header-btn" aria-label="Notifications">
+          <i class="fas fa-bell" aria-hidden="true"></i>
+          <span class="badge">2</span>
+        </button>
+        <button class="user-chip" id="userChip" aria-label="Your profile">
+          <span class="user-avatar" id="userAvatar">JA</span>
+          <span class="user-meta">
+            <strong id="headerName">—</strong>
+            <span id="headerId">—</span>
+          </span>
+        </button>
+        <button class="header-btn" id="logoutBtn" aria-label="Sign out">
+          <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============================================
+         MAIN
+         ============================================ -->
+    <main class="portal-main">
+
+      <div class="page-header">
+        <div class="page-header-text">
+          <p class="page-eyebrow">Welcome back</p>
+          <h2 id="greeting">Good day, <span id="greetingName">Dr. Aroha</span>.</h2>
+          <p>Here's an overview of your teaching for this week — courses, students, and items awaiting your attention.</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-book" aria-hidden="true"></i></div>
+          <div class="stat-label">Active courses</div>
+          <div class="stat-value">4</div>
+          <div class="stat-delta">Semester 1, 2026</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-users" aria-hidden="true"></i></div>
+          <div class="stat-label">Total students</div>
+          <div class="stat-value">128</div>
+          <div class="stat-delta up">
+            <i class="fas fa-arrow-trend-up" aria-hidden="true"></i> +6 since last week
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-clipboard-check" aria-hidden="true"></i></div>
+          <div class="stat-label">Awaiting grading</div>
+          <div class="stat-value">34</div>
+          <div class="stat-delta">Across 2 assignments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-calendar-day" aria-hidden="true"></i></div>
+          <div class="stat-label">Classes today</div>
+          <div class="stat-value">3</div>
+          <div class="stat-delta">Next: 11:00 AM</div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content-grid">
+
+        <!-- My courses -->
+        <div class="content-card">
+          <div class="content-card-head">
+            <h3>
+              <i class="fas fa-book" aria-hidden="true"></i>
+              My courses this semester
+            </h3>
+            <a href="#">View all <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+          </div>
+          <div class="content-card-body flush">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Students</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong>Data Structures &amp; Algorithms</strong>
+                    <span class="course-code">CS201 · Semester 1</span>
+                  </td>
+                  <td>42</td>
+                  <td><span class="badge-pill badge-success">Active</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Operating Systems</strong>
+                    <span class="course-code">CS210 · Semester 1</span>
+                  </td>
+                  <td>36</td>
+                  <td><span class="badge-pill badge-success">Active</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Database Systems</strong>
+                    <span class="course-code">CS220 · Semester 1</span>
+                  </td>
+                  <td>28</td>
+                  <td><span class="badge-pill badge-warning">Grading</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Project Workshop</strong>
+                    <span class="course-code">CS290 · Semester 1</span>
+                  </td>
+                  <td>22</td>
+                  <td><span class="badge-pill badge-info">Practical</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Today's schedule -->
+        <div class="content-card">
+          <div class="content-card-head">
+            <h3>
+              <i class="fas fa-calendar-day" aria-hidden="true"></i>
+              Today's schedule
+            </h3>
+            <a href="#">Full timetable <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+          </div>
+          <div class="content-card-body">
+            <div class="schedule-list">
+              <div class="schedule-item">
+                <div class="schedule-time">09:00</div>
+                <div class="schedule-body">
+                  <h4>Data Structures &amp; Algorithms</h4>
+                  <span>Room B-201 · 42 students</span>
+                </div>
+              </div>
+              <div class="schedule-item">
+                <div class="schedule-time">11:00</div>
+                <div class="schedule-body">
+                  <h4>Operating Systems</h4>
+                  <span>Room B-105 · 36 students</span>
+                </div>
+              </div>
+              <div class="schedule-item">
+                <div class="schedule-time">14:00</div>
+                <div class="schedule-body">
+                  <h4>Database Systems (Lab)</h4>
+                  <span>Lab 3 · 28 students</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Drawer overlay -->
+  <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
+
+  <!-- Toast -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script>
+  /* ============================================================
+     ROLE GUARD — staff only
+     ------------------------------------------------------------
+     Convenience only. Real protection lives on the backend, which
+     verifies the token and role on every API request.
+     ============================================================ */
+  (function guard() {
+    const token =
+      localStorage.getItem("dc_portal_token") ||
+      sessionStorage.getItem("dc_portal_token");
+    const role = sessionStorage.getItem("dc_portal_role");
+
+    if (!token) {
+      window.location.replace("signin.html");
+      return;
+    }
+
+    if (role && role !== "staff") {
+      const routes = {
+        student:   "student-portal.html",
+        admin:     "admin-portal.html",
+        applicant: "applicant-portal.html"
+      };
+      window.location.replace(routes[role] || "signin.html");
+    }
+  })();
+
+  /* ============================================================
+     HEADER — populate from stored user
+     ============================================================ */
+  (function hydrate() {
+    try {
+      const raw = sessionStorage.getItem("dc_portal_student");
+      if (!raw) return;
+      const user = JSON.parse(raw);
+      if (!user) return;
+
+      const first = user.firstName || "";
+      const last = user.lastName || "";
+      const initials = user.initials || ((first[0] || "") + (last[0] || "")).toUpperCase();
+
+      const nameEl = document.getElementById("headerName");
+      const idEl = document.getElementById("headerId");
+      const avatarEl = document.getElementById("userAvatar");
+      const greetName = document.getElementById("greetingName");
+
+      if (nameEl) nameEl.textContent = (first + " " + last).trim();
+      if (idEl) idEl.textContent = user.loginId || "—";
+      if (avatarEl) avatarEl.textContent = initials || "??";
+      if (greetName) greetName.textContent = "Dr. " + last;
+    } catch (_) { /* ignore */ }
+  })();
+
+  /* ============================================================
+     MOBILE DRAWER
+     ============================================================ */
+  (function drawer() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("drawerOverlay");
+    const menuBtn = document.getElementById("menuBtn");
+
+    function open() {
+      sidebar.classList.add("open");
+      overlay.classList.add("active");
+      menuBtn.setAttribute("aria-expanded", "true");
+      document.body.style.overflow = "hidden";
+    }
+    function close() {
+      sidebar.classList.remove("open");
+      overlay.classList.remove("active");
+      menuBtn.setAttribute("aria-expanded", "false");
+      document.body.style.overflow = "";
+    }
+
+    menuBtn.addEventListener("click", open);
+    overlay.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") close();
+    });
+  })();
+
+  /* ============================================================
+     SIGN OUT
+     ============================================================ */
+  document.getElementById("logoutBtn").addEventListener("click", function () {
+    try {
+      localStorage.removeItem("dc_portal_token");
+      sessionStorage.removeItem("dc_portal_token");
+      sessionStorage.removeItem("dc_portal_role");
+      sessionStorage.removeItem("dc_portal_student");
+    } catch (_) { /* ignore */ }
+    window.location.href = "signin.html";
+  });
+
+  /* ============================================================
+     SIDEBAR LINKS — placeholder for now
+     ============================================================ */
+  document.querySelectorAll(".sidebar-nav a").forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      if (this.getAttribute("href") === "#") {
+        e.preventDefault();
+        // No-op — sections not yet implemented. Just prevent jump.
+      }
+    });
+  });
+  </script>
+</body>
+</html>

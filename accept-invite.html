@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set your password | DameCooper Institute</title>
+  <meta name="description" content="Set your password to activate your DameCooper Institute account." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #10243a; --navy-deep: #091827; --navy-mid: #1a3554;
+      --gold: #b69a59; --gold-dark: #987b40; --gold-light: #d4bc85;
+      --ivory: #f7f5ef; --white: #ffffff;
+      --text-main: #202a35; --text-secondary: #66717d; --neutral: #edf1f5;
+      --success: #2e7d5b; --success-bg: #e8f4ee;
+      --warning: #b87333;
+      --danger: #b23a3a; --danger-bg: #fbeaea;
+      --info: #315c76; --info-bg: #e8f0f6;
+      --border-thin: rgba(16,36,58,0.08);
+      --font-serif: "Playfair Display", Georgia, serif;
+      --font-sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius: 2px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-sans); color: var(--text-main); line-height: 1.6;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(182,154,89,0.12), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(49,92,118,0.15), transparent 40%),
+        linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 20px; -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+    p { color: var(--text-secondary); }
+    a { color: inherit; text-decoration: none; transition: var(--transition); }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--gold); outline-offset: 2px; border-radius: var(--radius);
+    }
+
+    .card {
+      background-color: var(--white); width: 100%; max-width: 460px;
+      padding: 44px 40px 36px; border-radius: var(--radius);
+      box-shadow: 0 40px 80px -24px rgba(9,24,39,0.45);
+      position: relative;
+    }
+    .card::before {
+      content: ""; position: absolute; top: 0; left: 0;
+      width: 64px; height: 4px; background-color: var(--gold);
+    }
+    .brand-lockup {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+    }
+    .mark {
+      width: 44px; height: 44px; display: inline-flex; align-items: center;
+      justify-content: center; background-color: var(--navy); color: var(--gold);
+      font-family: var(--font-serif); font-weight: 700; font-size: 1rem;
+      border-radius: var(--radius); position: relative; flex-shrink: 0;
+    }
+    .mark::after {
+      content: ""; position: absolute; inset: 4px;
+      border: 1px solid rgba(182,154,89,0.4); border-radius: 1px;
+    }
+    .brand-text strong {
+      display: block; font-family: var(--font-serif); font-size: 1.0625rem;
+      color: var(--navy); line-height: 1.1;
+    }
+    .brand-text span {
+      display: block; font-size: 0.6875rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text-secondary); margin-top: 3px;
+    }
+    .card h2 { font-size: 1.75rem; color: var(--navy); margin-bottom: 8px; }
+    .card > p { font-size: 0.9375rem; color: var(--text-secondary); margin-bottom: 26px; line-height: 1.65; }
+
+    .msg {
+      display: none; align-items: flex-start; gap: 12px;
+      padding: 14px 16px; border-radius: var(--radius);
+      font-size: 0.8125rem; line-height: 1.55; margin-bottom: 20px;
+    }
+    .msg.show { display: flex; }
+    .msg i { flex-shrink: 0; margin-top: 2px; font-size: 0.875rem; }
+    .msg.error { background-color: var(--danger-bg); color: var(--danger); border-left: 3px solid var(--danger); }
+    .msg.success { background-color: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
+    .msg.info { background-color: var(--info-bg); color: var(--info); border-left: 3px solid var(--info); }
+
+    .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+    .field label {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.8125rem; font-weight: 600; color: var(--navy);
+    }
+    .field label .req { color: var(--gold-dark); }
+    .field-input { position: relative; }
+    .field-input input {
+      width: 100%; font-family: inherit; font-size: 0.9375rem;
+      color: var(--text-main); background-color: var(--white);
+      border: 1px solid var(--border-thin); border-radius: var(--radius);
+      padding: 13px 44px 13px 14px; transition: var(--transition);
+    }
+    .field-input input:focus {
+      border-color: var(--gold); outline: none;
+      box-shadow: 0 0 0 3px rgba(182,154,89,0.14);
+    }
+    .field-input input.invalid {
+      border-color: var(--danger);
+    }
+    .field-toggle {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      width: 34px; height: 34px; display: inline-flex;
+      align-items: center; justify-content: center;
+      color: var(--text-secondary); border-radius: var(--radius);
+      transition: var(--transition); font-size: 0.875rem;
+    }
+    .field-toggle:hover { color: var(--navy); background-color: var(--neutral); }
+    .field-error {
+      display: none; font-size: 0.75rem; color: var(--danger);
+      line-height: 1.5; align-items: center; gap: 6px; margin-top: 2px;
+    }
+    .field-error.show { display: flex; }
+
+    /* Password strength */
+    .pw-strength {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+      margin-top: 8px;
+    }
+    .pw-strength-bar {
+      height: 4px; background-color: var(--neutral);
+      border-radius: 2px; transition: background-color 0.25s ease;
+    }
+    .pw-strength-bar.active { background-color: var(--gold); }
+    .pw-strength-bar.weak { background-color: var(--danger); }
+    .pw-strength-bar.good { background-color: var(--warning); }
+    .pw-strength-bar.strong { background-color: var(--success); }
+    .pw-strength-label {
+      font-size: 0.6875rem; color: var(--text-secondary); margin-top: 6px;
+    }
+
+    /* Password requirements checklist */
+    .pw-requirements {
+      display: flex; flex-direction: column; gap: 6px;
+      margin-top: 12px; font-size: 0.75rem; color: var(--text-secondary);
+    }
+    .pw-req {
+      display: flex; align-items: center; gap: 8px;
+      transition: var(--transition);
+    }
+    .pw-req i {
+      font-size: 0.625rem; color: var(--neutral);
+      width: 12px; text-align: center;
+      transition: var(--transition);
+    }
+    .pw-req.met i { color: var(--success); }
+    .pw-req.met { color: var(--success); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 15px 26px; font-family: inherit;
+      font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.01em;
+      border-radius: var(--radius); transition: var(--transition);
+      cursor: pointer; border: 1px solid transparent; white-space: nowrap;
+      width: 100%;
+    }
+    .btn-gold { background-color: var(--gold); color: var(--navy-deep); }
+    .btn-gold:hover:not(:disabled) { background-color: var(--gold-dark); color: var(--white); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn i.fa-circle-notch { animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-note {
+      padding: 14px 16px; background-color: var(--ivory); border-radius: var(--radius);
+      font-size: 0.8125rem; line-height: 1.6; color: var(--text-secondary);
+      margin-bottom: 22px;
+    }
+    .info-note strong { color: var(--navy); display: block; margin-bottom: 2px; }
+
+    /* Success state */
+    .success-state {
+      display: none;
+      text-align: center;
+      padding: 12px 0 8px;
+    }
+    .success-state.show { display: block; }
+    .success-icon {
+      width: 72px; height: 72px; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--gold); border-radius: 50%;
+      color: var(--gold-dark); font-size: 1.75rem;
+      animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .success-state h3 {
+      font-size: 1.5rem; color: var(--navy); margin-bottom: 8px;
+    }
+    .success-state p {
+      font-size: 0.875rem; line-height: 1.65; margin-bottom: 22px;
+      max-width: 340px; margin-left: auto; margin-right: auto;
+    }
+    .success-state .btn { width: auto; min-width: 200px; }
+
+    .card-foot {
+      padding-top: 22px; border-top: 1px solid var(--border-thin);
+      font-size: 0.75rem; line-height: 1.6; color: var(--text-secondary);
+      text-align: center;
+    }
+    .card-foot a {
+      color: var(--gold-dark); font-weight: 600;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .card-foot a:hover { color: var(--navy); }
+
+    @media (max-width: 480px) {
+      body { padding: 20px 14px; }
+      .card { padding: 32px 24px 28px; }
+      .card::before { width: 48px; height: 3px; }
+      .card h2 { font-size: 1.5rem; }
+      .success-icon { width: 60px; height: 60px; font-size: 1.5rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="card" aria-labelledby="inviteTitle">
+    <div class="brand-lockup">
+      <span class="mark" aria-hidden="true">DC</span>
+      <span class="brand-text">
+        <strong>DameCooper</strong>
+        <span>Institute of Higher Learning</span>
+      </span>
+    </div>
+
+    <h2 id="inviteTitle">Set your password</h2>
+    <p id="inviteLede">Verifying your invitation…</p>
+
+    <div class="msg" id="msg" role="alert" aria-live="polite">
+      <i class="fas fa-circle-info" id="msgIcon" aria-hidden="true"></i>
+      <span id="msgText"></span>
+    </div>
+
+    <!-- Account summary -->
+    <div class="info-note" id="accountSummary" style="display:none;">
+      <strong id="summaryName">—</strong>
+      <span id="summaryLoginId">—</span>
+    </div>
+
+    <!-- Password form -->
+    <form id="passwordForm" novalidate style="display:none;">
+
+      <div class="field">
+        <label for="newPassword">
+          <span>New password <span class="req">*</span></span>
+        </label>
+        <span class="field-input">
+          <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" required />
+          <button type="button" class="field-toggle" id="toggleNew" aria-label="Show password">
+            <i class="fas fa-eye" aria-hidden="true"></i>
+          </button>
+        </span>
+        <div class="pw-strength" id="pwStrength" aria-hidden="true">
+          <span class="pw-strength-bar"></span>
+          <span class="pw-strength-bar"></span>
+          <span class="pw-strength-bar"></span>
+          <span class="pw-strength-bar"></span>
+        </div>
+        <div class="pw-strength-label" id="pwStrengthLabel">Use at least 8 characters.</div>
+
+        <ul class="pw-requirements" id="pwRequirements" aria-live="polite">
+          <li class="pw-req" data-req="length">
+            <i class="fas fa-circle" aria-hidden="true"></i>
+            At least 8 characters
+          </li>
+          <li class="pw-req" data-req="upper">
+            <i class="fas fa-circle" aria-hidden="true"></i>
+            One uppercase letter
+          </li>
+          <li class="pw-req" data-req="lower">
+            <i class="fas fa-circle" aria-hidden="true"></i>
+            One lowercase letter
+          </li>
+          <li class="pw-req" data-req="number">
+            <i class="fas fa-circle" aria-hidden="true"></i>
+            One number
+          </li>
+        </ul>
+
+        <span class="field-error" id="newPasswordError" role="alert">
+          <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+          <span>Password must be at least 8 characters.</span>
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword">
+          <span>Confirm password <span class="req">*</span></span>
+        </label>
+        <span class="field-input">
+          <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required />
+          <button type="button" class="field-toggle" id="toggleConfirm" aria-label="Show password">
+            <i class="fas fa-eye" aria-hidden="true"></i>
+          </button>
+        </span>
+        <span class="field-error" id="confirmPasswordError" role="alert">
+          <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+          <span>Passwords do not match.</span>
+        </span>
+      </div>
+
+      <button type="submit" class="btn btn-gold" id="submitBtn">
+        Set password and activate account
+        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+      </button>
+    </form>
+
+    <!-- Success state (replaces the form once the account is activated) -->
+    <div class="success-state" id="successState" role="status" aria-live="polite">
+      <div class="success-icon">
+        <i class="fas fa-check" aria-hidden="true"></i>
+      </div>
+      <h3>You're all set</h3>
+      <p id="successText">
+        Your DameCooper account is now active. You'll be redirected to the
+        sign-in page shortly.
+      </p>
+      <a href="signin.html?activated=1" class="btn btn-gold">
+        Continue to sign in
+        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <div class="card-foot" id="cardFoot">
+      Already have an account?
+      <a href="signin.html">Sign in instead</a>
+    </div>
+  </main>
+
+  <script>
+  /* ============================================================
+     CONFIGURATION
+     ============================================================ */
+  const CONFIG = {
+    API_BASE_URL: "/api",
+    DEMO_MODE: true,                 // ← set to false once the backend is live
+    REDIRECT_DELAY_MS: 2500
+  };
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  const state = {
+    token: null,
+    invite: null,                    // { firstName, lastName, loginId, email, role }
+    submitting: false
+  };
+
+  /* ============================================================
+     DOM REFERENCES
+     ============================================================ */
+  const dom = {
+    lede: document.getElementById("inviteLede"),
+    msg: document.getElementById("msg"),
+    msgIcon: document.getElementById("msgIcon"),
+    msgText: document.getElementById("msgText"),
+    summary: document.getElementById("accountSummary"),
+    summaryName: document.getElementById("summaryName"),
+    summaryLoginId: document.getElementById("summaryLoginId"),
+    form: document.getElementById("passwordForm"),
+    newPassword: document.getElementById("newPassword"),
+    confirmPassword: document.getElementById("confirmPassword"),
+    toggleNew: document.getElementById("toggleNew"),
+    toggleConfirm: document.getElementById("toggleConfirm"),
+    pwStrength: document.getElementById("pwStrength"),
+    pwStrengthLabel: document.getElementById("pwStrengthLabel"),
+    pwRequirements: document.getElementById("pwRequirements"),
+    newPasswordError: document.getElementById("newPasswordError"),
+    confirmPasswordError: document.getElementById("confirmPasswordError"),
+    submitBtn: document.getElementById("submitBtn"),
+    successState: document.getElementById("successState"),
+    successText: document.getElementById("successText"),
+    cardFoot: document.getElementById("cardFoot")
+  };
+
+  /* ============================================================
+     UI HELPERS
+     ============================================================ */
+  function showMessage(kind, text) {
+    dom.msg.className = "msg show " + kind;
+    dom.msgText.textContent = text;
+    dom.msgIcon.className = "fas " + (
+      kind === "error" ? "fa-circle-exclamation" :
+      kind === "success" ? "fa-circle-check" :
+      "fa-circle-info"
+    );
+  }
+
+  function clearMessage() {
+    dom.msg.className = "msg";
+    dom.msgText.textContent = "";
+  }
+
+  function setFieldError(field, errorEl, message) {
+    if (message) {
+      field.classList.add("invalid");
+      field.setAttribute("aria-invalid", "true");
+      errorEl.querySelector("span").textContent = message;
+      errorEl.classList.add("show");
+    } else {
+      field.classList.remove("invalid");
+      field.removeAttribute("aria-invalid");
+      errorEl.classList.remove("show");
+    }
+  }
+
+  function setLoading(button, isLoading, label) {
+    if (!button) return;
+    if (button.dataset.originalHtml === undefined) {
+      button.dataset.originalHtml = button.innerHTML;
+    }
+    if (isLoading) {
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      button.innerHTML =
+        (label || "Please wait") +
+        ' <i class="fas fa-circle-notch" aria-hidden="true"></i>';
+    } else {
+      button.disabled = false;
+      button.removeAttribute("aria-busy");
+      button.innerHTML = button.dataset.originalHtml;
+    }
+  }
+
+  function getTokenFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("token");
+  }
+
+  /* ============================================================
+     PASSWORD STRENGTH + REQUIREMENTS
+     ============================================================ */
+  function scorePassword(pw) {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return Math.min(score, 4);
+  }
+
+  function evaluateRequirements(pw) {
+    return {
+      length: pw.length >= 8,
+      upper: /[A-Z]/.test(pw),
+      lower: /[a-z]/.test(pw),
+      number: /[0-9]/.test(pw)
+    };
+  }
+
+  function renderStrength(pw) {
+    const bars = dom.pwStrength.querySelectorAll(".pw-strength-bar");
+    const score = scorePassword(pw);
+
+    bars.forEach(function (b) {
+      b.classList.remove("active", "weak", "good", "strong");
+    });
+
+    const label = ["Use at least 8 characters.", "Weak", "Fair", "Good", "Strong"][score];
+    const cls = ["", "weak", "good", "good", "strong"][score];
+
+    for (let i = 0; i < score; i++) {
+      bars[i].classList.add("active");
+      if (cls) bars[i].classList.add(cls);
+    }
+    dom.pwStrengthLabel.textContent = pw ? label : "Use at least 8 characters.";
+  }
+
+  function renderRequirements(pw) {
+    const results = evaluateRequirements(pw);
+    dom.pwRequirements.querySelectorAll(".pw-req").forEach(function (node) {
+      const key = node.dataset.req;
+      if (results[key]) {
+        node.classList.add("met");
+      } else {
+        node.classList.remove("met");
+      }
+    });
+  }
+
+  /* ============================================================
+     VERIFY TOKEN
+     ============================================================ */
+  async function verifyToken() {
+    state.token = getTokenFromQuery();
+
+    if (!state.token) {
+      showMessage(
+        "error",
+        "This invitation link is missing its secure token. Please use the original link from your email, or contact support."
+      );
+      dom.lede.textContent = "We can't verify this invitation.";
+      dom.cardFoot.style.display = "none";
+      return;
+    }
+
+    /* --------------------------------------------------------
+       DEMO MODE — simulate a valid invitation
+       -------------------------------------------------------- */
+    if (CONFIG.DEMO_MODE) {
+      await new Promise(function (r) { setTimeout(r, 600); });
+      state.invite = {
+        firstName: "New",
+        lastName: "User",
+        loginId: "DC/2026/999",
+        email: "new.user@student.damecooperinstitute.com",
+        role: "student"
+      };
+      showInviteReady();
+      return;
+    }
+
+    /* --------------------------------------------------------
+       REAL BACKEND VERIFICATION
+       --------------------------------------------------------
+       The backend should accept:
+         { token: string }
+       And respond with:
+         200 { invite: { firstName, lastName, loginId, email, role } }
+         400 / 401 / 410 { message, code }
+       -------------------------------------------------------- */
+    try {
+      const res = await fetch(CONFIG.API_BASE_URL + "/invitations/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ token: state.token })
+      });
+
+      let data = null;
+      try { data = await res.json(); } catch (_) { /* empty body */ }
+
+      if (!res.ok) {
+        showMessage(
+          "error",
+          (data && data.message) ||
+            "This invitation link is invalid or has expired. Please contact the IT Service Desk for a new one."
+        );
+        dom.lede.textContent = "We can't verify this invitation.";
+        dom.cardFoot.style.display = "none";
+        return;
+      }
+
+      state.invite = data.invite;
+      showInviteReady();
+
+    } catch (err) {
+      showMessage(
+        "error",
+        "We couldn't reach the server. Please check your connection and try again."
+      );
+      dom.lede.textContent = "Something went wrong.";
+      dom.cardFoot.style.display = "none";
+    }
+  }
+
+  function showInviteReady() {
+    clearMessage();
+    dom.lede.textContent =
+      "Welcome, " + state.invite.firstName + ". Choose a password to activate your account.";
+    dom.summaryName.textContent = state.invite.firstName + " " + state.invite.lastName;
+    dom.summaryLoginId.textContent = "DameCooper ID: " + state.invite.loginId;
+    dom.summary.style.display = "";
+    dom.form.style.display = "";
+    setTimeout(function () { dom.newPassword.focus(); }, 100);
+  }
+
+  /* ============================================================
+     SUBMIT
+     ============================================================ */
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (state.submitting) return;
+    clearMessage();
+
+    const pw = dom.newPassword.value;
+    const confirm = dom.confirmPassword.value;
+
+    let valid = true;
+
+    // Password length
+    if (!pw || pw.length < 8) {
+      setFieldError(
+        dom.newPassword,
+        dom.newPasswordError,
+        "Password must be at least 8 characters."
+      );
+      valid = false;
+    } else {
+      setFieldError(dom.newPassword, dom.newPasswordError, null);
+    }
+
+    // Password confirmation
+    if (pw !== confirm) {
+      setFieldError(
+        dom.confirmPassword,
+        dom.confirmPasswordError,
+        "Passwords do not match."
+      );
+      valid = false;
+    } else {
+      setFieldError(dom.confirmPassword, dom.confirmPasswordError, null);
+    }
+
+    if (!valid) {
+      const firstInvalid =
+        dom.newPassword.classList.contains("invalid")
+          ? dom.newPassword
+          : dom.confirmPassword;
+      firstInvalid.focus();
+      return;
+    }
+
+    state.submitting = true;
+    setLoading(dom.submitBtn, true, "Activating account");
+
+    try {
+      /* --------------------------------------------------------
+         DEMO MODE
+         -------------------------------------------------------- */
+      if (CONFIG.DEMO_MODE) {
+        await new Promise(function (r) { setTimeout(r, 900); });
+        showSuccess("Your account is ready. Redirecting to sign-in…");
+        return;
+      }
+
+      /* --------------------------------------------------------
+         REAL BACKEND CALL
+         --------------------------------------------------------
+         The backend should accept:
+           { token: string, password: string }
+         And respond with:
+           200 { ok: true, loginId: string }
+           400 / 401 / 410 { message, code }
+         -------------------------------------------------------- */
+      const res = await fetch(CONFIG.API_BASE_URL + "/invitations/accept", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ token: state.token, password: pw })
+      });
+
+      let data = null;
+      try { data = await res.json(); } catch (_) { /* empty body */ }
+
+      if (!res.ok) {
+        showMessage(
+          "error",
+          (data && data.message) ||
+            "We couldn't activate your account. The invitation may have expired — please contact the IT Service Desk."
+        );
+        setLoading(dom.submitBtn, false);
+        state.submitting = false;
+        return;
+      }
+
+      showSuccess("Your account is ready. Redirecting to sign-in…");
+
+    } catch (err) {
+      showMessage("error", "We couldn't reach the server. Please try again.");
+      setLoading(dom.submitBtn, false);
+      state.submitting = false;
+    }
+  }
+
+  function showSuccess(message) {
+    // Hide the form and its summary, show the success panel.
+    dom.form.style.display = "none";
+    dom.summary.style.display = "none";
+    dom.msg.className = "msg";
+    dom.msgText.textContent = "";
+    dom.cardFoot.style.display = "none";
+
+    dom.successText.textContent = message;
+    dom.successState.classList.add("show");
+    dom.lede.textContent = "Account activated";
+
+    // Redirect to sign-in after a short pause.
+    setTimeout(function () {
+      window.location.href = "signin.html?activated=1";
+    }, CONFIG.REDIRECT_DELAY_MS);
+  }
+
+  /* ============================================================
+     EVENT WIRING
+     ============================================================ */
+  function bindEvents() {
+    // Password visibility toggles
+    dom.toggleNew.addEventListener("click", function () {
+      const isPassword = dom.newPassword.type === "password";
+      dom.newPassword.type = isPassword ? "text" : "password";
+      this.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+      this.querySelector("i").className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
+      dom.newPassword.focus();
+    });
+
+    dom.toggleConfirm.addEventListener("click", function () {
+      const isPassword = dom.confirmPassword.type === "password";
+      dom.confirmPassword.type = isPassword ? "text" : "password";
+      this.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+      this.querySelector("i").className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
+      dom.confirmPassword.focus();
+    });
+
+    // Live password feedback
+    dom.newPassword.addEventListener("input", function () {
+      const value = this.value;
+      renderStrength(value);
+      renderRequirements(value);
+
+      // Clear any previous field error once the user types again.
+      if (this.classList.contains("invalid")) {
+        setFieldError(dom.newPassword, dom.newPasswordError, null);
+      }
+      // If the confirm field already had an error, recheck it too.
+      if (
+        dom.confirmPassword.classList.contains("invalid") &&
+        dom.confirmPassword.value === value
+      ) {
+        setFieldError(dom.confirmPassword, dom.confirmPasswordError, null);
+      }
+    });
+
+    dom.confirmPassword.addEventListener("input", function () {
+      if (this.classList.contains("invalid")) {
+        setFieldError(dom.confirmPassword, dom.confirmPasswordError, null);
+      }
+    });
+
+    // Form submit
+    dom.form.addEventListener("submit", handleSubmit);
+  }
+
+  /* ============================================================
+     INIT
+     ============================================================ */
+  document.addEventListener("DOMContentLoaded", function () {
+    bindEvents();
+    verifyToken();
+  });
+  </script>
+</body>
+</html>
