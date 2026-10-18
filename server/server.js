@@ -4,14 +4,14 @@
 // Runs on Render. MongoDB Atlas for storage.
 //
 // Required environment variables:
-//   PORT            — injected by Render
 //   NODE_ENV        — "production"
-//   JWT_SECRET      — long random string
+//   JWT_SECRET      — long random string (>=32 chars)
 //   CORS_ORIGIN     — comma-separated allowed origins
 //   FRONTEND_URL    — public URL of the static site
 //   MONGODB_URI     — mongodb+srv://...
 //
 // Optional:
+//   PORT            — injected by Render
 //   RESEND_API_KEY  — enables real email sending
 //   EMAIL_FROM      — sender name + address
 // ============================================================
@@ -38,22 +38,49 @@ const Announcement        = require("./models/Announcement");
 const Attendance          = require("./models/Attendance");
 const PasswordResetToken  = require("./models/PasswordResetToken");
 
-const { sendEmail } = require("./email");
-const storage       = require("./storage");
+const {
+  sendLoginAlert,
+  sendPasswordChanged,
+  sendPasswordReset,
+  sendInvitation
+} = require("./email");
+const storage = require("./storage");
 
+// ------------------------------------------------------------
+// CONFIG + HARD-FAIL JWT_SECRET IN PROD
+// ------------------------------------------------------------
+const PORT = process.env.PORT || 3000;
+const JWT_EXPIRES_IN = "4h";
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://damecooperinstitute.com";
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  if (process.env.NODE_ENV === "production") {
+    console.error(
+      "[start] JWT_SECRET missing or shorter than 32 chars — refusing to start."
+    );
+    process.exit(1);
+  }
+  console.warn(
+    "[start] JWT_SECRET missing or weak — using dev fallback. DO NOT deploy this way."
+  );
+}
+const SIGNING_KEY = JWT_SECRET || "dev-only-change-me-please-32-chars-min";
+
+// ------------------------------------------------------------
+// APP + TRUST PROXY
+// ------------------------------------------------------------
 const app = express();
 app.set("trust proxy", 1);
-
-const PORT           = process.env.PORT || 3000;
-const JWT_SECRET     = process.env.JWT_SECRET || "dev-only-change-me";
-const JWT_EXPIRES_IN = "4h";
-const FRONTEND_URL   = process.env.FRONTEND_URL || "https://damecooperinstitute.com";
 
 // ------------------------------------------------------------
 // CORS
 // ------------------------------------------------------------
-const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN ||
-  "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500")
+const ALLOWED_ORIGINS = (
+  process.env.CORS_ORIGIN ||
+  "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500"
+)
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -103,7 +130,7 @@ const loginLimiter = rateLimit({
 });
 
 const forgotLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,   // 1 hour
+  windowMs: 60 * 60 * 1000,
   limit: 5,
   standardHeaders: "draft-7",
   legacyHeaders: false,
@@ -134,7 +161,7 @@ function requireAuth(req, res, next) {
       .json({ message: "Authentication required.", code: "UNAUTHENTICATED" });
   }
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    req.user = jwt.verify(token, SIGNING_KEY);
     next();
   } catch {
     res.status(401).json({
@@ -168,15 +195,6 @@ function todayName() {
   return names[new Date().getDay()];
 }
 
-function escapeHtml(s) {
-  return String(s == null ? "" : s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 // ============================================================
 // HEALTH CHECK
 // ============================================================
@@ -198,8 +216,13 @@ app.get("/api/health", (req, res) => {
 
 // ============================================================
 // AUTH ROUTES
+// ------------------------------------------------------------
+// One handler, mounted on both /signin and /login. The limiter
+// runs once per request regardless of which alias is hit —
+// previously the alias re-dispatched through app._router,
+// which re-ran the limiter and halved the effective budget.
 // ============================================================
-app.post("/api/auth/signin", loginLimiter, async (req, res, next) => {
+async function signinHandler(req, res, next) {
   try {
     const body = req.body || {};
     const loginId = body.loginId || body.admissionNo;
@@ -215,7 +238,8 @@ app.post("/api/auth/signin", loginLimiter, async (req, res, next) => {
     const user = await User.findOne({ loginId: loginId.trim().toUpperCase() });
 
     // Constant-time response — always run bcrypt even if user not found
-    const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+    const DUMMY_HASH =
+      "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
     if (!user) {
       await bcrypt.compare(password, DUMMY_HASH);
       return res.status(401).json({
@@ -244,20 +268,28 @@ app.post("/api/auth/signin", loginLimiter, async (req, res, next) => {
 
     const token = jwt.sign(
       { sub: user._id.toString(), loginId: user.loginId, role: user.role },
-      JWT_SECRET,
+      SIGNING_KEY,
       { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    // Fire-and-forget — never block the login response on email delivery
+    sendLoginAlert({
+      user,
+      ip: req.ip,
+      userAgent: req.get("user-agent"),
+      when: new Date()
+    }).catch((err) =>
+      console.error("[email] login alert failed:", err.message)
     );
 
     res.json({ token, user: user.toPublicJSON() });
   } catch (err) {
     next(err);
   }
-});
+}
 
-app.post("/api/auth/login", loginLimiter, (req, res, next) => {
-  req.url = "/api/auth/signin";
-  app._router.handle(req, res, next);
-});
+app.post("/api/auth/signin", loginLimiter, signinHandler);
+app.post("/api/auth/login",  loginLimiter, signinHandler);
 
 app.post("/api/auth/logout", requireAuth, (req, res) => {
   res.json({ ok: true });
@@ -307,6 +339,11 @@ app.post("/api/auth/change-password", requireAuth, async (req, res, next) => {
     user.passwordHash = await bcrypt.hash(newPassword, 10);
     await user.save();
 
+    // Fire-and-forget confirmation — password is already changed
+    sendPasswordChanged({ user, ip: req.ip }).catch((err) =>
+      console.error("[email] password-changed notify:", err.message)
+    );
+
     res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -316,8 +353,8 @@ app.post("/api/auth/change-password", requireAuth, async (req, res, next) => {
 // ============================================================
 // PASSWORD RESET (unauthenticated)
 // ------------------------------------------------------------
-// The response is always generic, whether or not the email
-// exists, to prevent account enumeration.
+// Response is always generic, whether or not the email exists,
+// to prevent account enumeration.
 // ============================================================
 app.post("/api/auth/forgot-password", forgotLimiter, async (req, res, next) => {
   try {
@@ -337,7 +374,6 @@ app.post("/api/auth/forgot-password", forgotLimiter, async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-
     if (!user) {
       return res.json(genericResponse);
     }
@@ -351,26 +387,9 @@ app.post("/api/auth/forgot-password", forgotLimiter, async (req, res, next) => {
 
     const resetUrl = FRONTEND_URL + "/reset-password.html?token=" + token;
 
-    // Fire and forget — never block the response on email delivery
-    sendEmail({
-      to: user.email,
-      subject: "Reset your DameCooper password",
-      text:
-        "Hello " + user.firstName + ",\n\n" +
-        "Someone requested a password reset for your DameCooper account.\n\n" +
-        "To choose a new password, open this link within the next hour:\n\n" +
-        resetUrl + "\n\n" +
-        "If you didn't request this, you can ignore this email — your password will not change.\n\n" +
-        "— DameCooper Institute",
-      html:
-        '<p>Hello ' + escapeHtml(user.firstName) + ',</p>' +
-        '<p>Someone requested a password reset for your DameCooper account.</p>' +
-        '<p><a href="' + resetUrl + '" style="background:#b69a59;color:#10243a;padding:12px 24px;text-decoration:none;border-radius:2px;font-weight:600;display:inline-block;">Choose a new password</a></p>' +
-        '<p style="color:#66717d;font-size:13px;">Or open this URL directly:<br>' + resetUrl + '</p>' +
-        '<p style="color:#66717d;font-size:13px;">This link expires in 1 hour. If you didn\'t request it, you can ignore this email.</p>' +
-        '<p style="color:#66717d;font-size:13px;">— DameCooper Institute</p>'
-    }).catch((err) =>
-      console.error("[email] Password reset send failed:", err.message)
+    // Fire-and-forget — never block the response on email delivery
+    sendPasswordReset({ user, resetUrl }).catch((err) =>
+      console.error("[email] password reset send failed:", err.message)
     );
 
     res.json(genericResponse);
@@ -468,7 +487,6 @@ app.post("/api/auth/reset-password", async (req, res, next) => {
 // ============================================================
 // STUDENT ROUTES
 // ============================================================
-
 app.get(
   "/api/student/profile",
   requireAuth,
@@ -495,9 +513,7 @@ app.get(
       const grades = await Grade.find({ studentId: req.user.sub })
         .sort({ semester: -1, code: 1 });
 
-      res.json({
-        grades: grades.map((g) => g.toPublicJSON())
-      });
+      res.json({ grades: grades.map((g) => g.toPublicJSON()) });
     } catch (err) {
       next(err);
     }
@@ -520,7 +536,6 @@ app.get(
       ).length;
       const attendancePercent = total ? Math.round((present / total) * 100) : null;
 
-      // Per-course breakdown
       const byCourse = {};
       records.forEach((r) => {
         if (!byCourse[r.courseCode]) {
@@ -625,15 +640,10 @@ app.get(
     try {
       const now = new Date();
       const announcements = await Announcement.find({
-        $or: [
-          { expiresAt: null },
-          { expiresAt: { $gt: now } }
-        ]
+        $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }]
       }).sort({ publishedAt: -1 }).limit(50);
 
-      res.json({
-        announcements: announcements.map((a) => a.toPublicJSON())
-      });
+      res.json({ announcements: announcements.map((a) => a.toPublicJSON()) });
     } catch (err) {
       next(err);
     }
@@ -649,9 +659,7 @@ app.get(
       const docs = await Document.find({ studentId: req.user.sub })
         .sort({ updatedAt: -1 });
 
-      res.json({
-        documents: docs.map((d) => d.toPublicJSON())
-      });
+      res.json({ documents: docs.map((d) => d.toPublicJSON()) });
     } catch (err) {
       next(err);
     }
@@ -673,7 +681,6 @@ app.get(
         });
       }
 
-      // Ownership check — students can only download their own documents
       if (doc.studentId.toString() !== req.user.sub) {
         return res.status(403).json({
           message: "You do not have access to this document.",
@@ -729,10 +736,7 @@ app.get(
           Grade.find({ studentId }),
           Invoice.find({ studentId }),
           Announcement.find({
-            $or: [
-              { expiresAt: null },
-              { expiresAt: { $gt: new Date() } }
-            ]
+            $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
           }).sort({ publishedAt: -1 }).limit(3),
           ClassSession.find({ studentId, dayOfWeek: todayName() }).sort({ startTime: 1 }),
           Attendance.find({ studentId })
@@ -742,12 +746,10 @@ app.get(
         return res.status(404).json({ message: "User not found.", code: "NOT_FOUND" });
       }
 
-      // Compute GPA from points (simple average, one decimal place)
       const gpa = grades.length
         ? (grades.reduce((sum, g) => sum + g.points, 0) / grades.length).toFixed(1)
         : "—";
 
-      // Credits earned this calendar year
       const thisYear = new Date().getFullYear();
       const creditsThisYear = grades
         .filter((g) => g.publishedAt && g.publishedAt.getFullYear() === thisYear)
@@ -759,7 +761,6 @@ app.get(
 
       const currency = invoices[0] ? invoices[0].currency : "NZD";
 
-      // Real attendance percent — null when there are no records yet
       let attendancePercent = null;
       if (attendance.length) {
         const present = attendance.filter(
@@ -814,10 +815,6 @@ app.get(
   }
 );
 
-
-// ------------------------------------------------------------
-// STAFF — dashboard aggregate
-// ------------------------------------------------------------
 app.get(
   "/api/staff/dashboard",
   requireAuth,
@@ -832,7 +829,6 @@ app.get(
       const sessions = await ClassSession.find({ staffId: req.user.sub })
         .sort({ dayOfWeek: 1, startTime: 1 });
 
-      // Unique course codes
       const courseSet = new Map();
       sessions.forEach((s) => {
         if (!courseSet.has(s.courseCode)) {
@@ -847,28 +843,22 @@ app.get(
       });
       const courses = Array.from(courseSet.values());
 
-      // Unique students across all the staff member's courses
       const courseCodes = courses.map((c) => c.code);
       const studentIds = await ClassSession.distinct("studentId", {
         courseCode: { $in: courseCodes }
       });
       const totalStudents = studentIds.length;
 
-      // Today's schedule
       const todaySessions = sessions
         .filter((s) => s.dayOfWeek === todayName())
         .map((s) => s.toPublicJSON());
 
-      // Recent announcements (global feed)
       const announcements = await Announcement.find({
         $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
       })
         .sort({ publishedAt: -1 })
         .limit(3);
 
-      // Awaiting grading — count of Grade docs still missing points for
-      // this staff member's courses. Since we don't track "submitted" yet,
-      // we approximate with a count of zero.
       const awaitingGrading = 0;
 
       res.json({
@@ -889,9 +879,6 @@ app.get(
   }
 );
 
-// ------------------------------------------------------------
-// STAFF — courses taught
-// ------------------------------------------------------------
 app.get(
   "/api/staff/courses",
   requireAuth,
@@ -932,9 +919,6 @@ app.get(
   }
 );
 
-// ------------------------------------------------------------
-// STAFF — students enrolled in a course
-// ------------------------------------------------------------
 app.get(
   "/api/staff/courses/:courseCode/students",
   requireAuth,
@@ -943,7 +927,6 @@ app.get(
     try {
       const courseCode = req.params.courseCode.toUpperCase();
 
-      // Ensure the staff member actually teaches this course
       const teaches = await ClassSession.findOne({
         staffId: req.user.sub,
         courseCode
@@ -980,9 +963,6 @@ app.get(
   }
 );
 
-// ------------------------------------------------------------
-// STAFF — attendance marking
-// ------------------------------------------------------------
 app.post(
   "/api/staff/attendance",
   requireAuth,
@@ -1013,7 +993,6 @@ app.post(
         });
       }
 
-      // Normalize to midnight UTC so we don't create duplicates at different times
       const d = new Date(date);
       d.setUTCHours(0, 0, 0, 0);
 
@@ -1104,22 +1083,22 @@ app.get(
     try {
       const users = await User.find().sort({ createdAt: -1 });
       const list = users.map((u) => {
-  const pub = u.toPublicJSON();
-  return {
-    id: u._id.toString(),
-    loginId: pub.loginId,
-    role: pub.role,
-    firstName: pub.firstName,
-    lastName: pub.lastName,
-    initials: pub.initials,
-    email: pub.email,
-    phone: pub.phone,
-    status: u.status || "active",
-    lastLogin: u.lastLoginAt
-      ? u.lastLoginAt.toISOString().slice(0, 16).replace("T", " ")
-      : "—"
-  };
-});
+        const pub = u.toPublicJSON();
+        return {
+          id: u._id.toString(),
+          loginId: pub.loginId,
+          role: pub.role,
+          firstName: pub.firstName,
+          lastName: pub.lastName,
+          initials: pub.initials,
+          email: pub.email,
+          phone: pub.phone,
+          status: u.status || "active",
+          lastLogin: u.lastLoginAt
+            ? u.lastLoginAt.toISOString().slice(0, 16).replace("T", " ")
+            : "—"
+        };
+      });
 
       const invites = await Invitation.find({
         acceptedAt: null,
@@ -1177,7 +1156,8 @@ app.post(
   requireRole("admin"),
   async (req, res, next) => {
     try {
-      const { firstName, lastName, email, loginId, role, programme, adminConfirm } = req.body || {};
+      const { firstName, lastName, email, loginId, role, programme, adminConfirm } =
+        req.body || {};
 
       if (!firstName || !lastName || !email || !loginId || !role) {
         return res.status(400).json({
@@ -1236,10 +1216,14 @@ app.post(
         createdBy: req.user.sub
       });
 
-      const inviteUrl =
-        FRONTEND_URL + "/accept-invite.html?token=" + token;
+      const inviteUrl = FRONTEND_URL + "/accept-invite.html?token=" + token;
 
       console.log("[admin] Invitation created for " + normalizedEmail + " → " + inviteUrl);
+
+      // Fire-and-forget — invite link is also returned in the response for fallback
+      sendInvitation({ invite, inviteUrl }).catch((err) =>
+        console.error("[email] invite send failed:", err.message)
+      );
 
       res.status(201).json({
         user: {
@@ -1280,6 +1264,11 @@ app.post(
         FRONTEND_URL + "/accept-invite.html?token=" + invite.token;
 
       console.log("[admin] Invitation resent to " + invite.email + " → " + inviteUrl);
+
+      // Fire-and-forget — same helper, same template, new expiry in place
+      sendInvitation({ invite, inviteUrl }).catch((err) =>
+        console.error("[email] resend invite failed:", err.message)
+      );
 
       res.json({ ok: true, inviteUrl });
     } catch (err) {
@@ -1446,6 +1435,13 @@ app.use((err, req, res, next) => {
       message: "Validation failed.",
       code: "VALIDATION_ERROR",
       details: Object.keys(err.errors || {})
+    });
+  }
+
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      message: "Invalid ID format.",
+      code: "INVALID_ID"
     });
   }
 
