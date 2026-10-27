@@ -361,7 +361,7 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     // Post to FormSubmit
     const data = new FormData(form);
 
-    fetch("https://formsubmit.co/ajax/info@damecooperinstitute.com", {
+    fetch("https://formsubmit.co/ajax/damecoopertraining@gmail.com", {
       method: "POST",
       headers: { Accept: "application/json" },
       body: data
