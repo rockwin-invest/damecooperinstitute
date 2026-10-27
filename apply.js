@@ -14,8 +14,6 @@
 
 /* ============================================================
    1. AOS — scroll animations
-   ------------------------------------------------------------
-   Skipped entirely for users with reduced-motion preference.
    ============================================================ */
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   AOS.init({
@@ -32,19 +30,23 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
    If the user arrived here via ?programme=… from programmes.html,
    pre-fill the relevant fields, show a confirmation banner, and
    add hidden fields so the email names exactly what was chosen.
+
+   Uses dynamic "does this option exist?" checks rather than
+   hardcoded maps, so adding new schools / levels / modes to the
+   dropdowns automatically makes pre-selection work for them.
    ============================================================ */
 (function preSelectProgramme() {
   const params = new URLSearchParams(window.location.search);
   const programme = params.get("programme");
-  const title = params.get("title");
-  const school = params.get("school");
-  const level = params.get("level");
-  const mode = params.get("mode");
-  const pathway = params.get("pathway");
+  const title     = params.get("title");
+  const school    = params.get("school");
+  const level     = params.get("level");
+  const mode      = params.get("mode");
+  const pathway   = params.get("pathway");
 
   if (!programme && !title) return;
 
-  // ---- Banner confirming the selection
+  // ---- Confirmation banner
   const formWrap = document.querySelector(".application-form-wrap");
   if (formWrap) {
     const banner = document.createElement("div");
@@ -72,48 +74,19 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     formWrap.insertBefore(banner, formWrap.firstChild);
   }
 
-  // ---- Pre-select school
-  const schoolMap = {
-    business: "business",
-    computing: "engineering",   // maps to apply form's option set
-    engineering: "engineering",
-    health: "health",
-    environmental: "other",
-    creative: "arts",
-    education: "other",
-    law: "other"
-  };
-  const schoolSelect = document.getElementById("school");
-  if (schoolSelect && school && schoolMap[school]) {
-    schoolSelect.value = schoolMap[school];
+  // ---- Helper: set a <select>'s value only if that option exists
+  function selectIfOptionExists(selectEl, value) {
+    if (!selectEl || !value) return;
+    const exists = Array.from(selectEl.options).some(function (opt) {
+      return opt.value === value;
+    });
+    if (exists) selectEl.value = value;
   }
 
-  // ---- Pre-select level
-  const levelMap = {
-    "undergraduate": "undergraduate",
-    "postgraduate": "postgraduate",
-    "doctoral": "doctoral",
-    "certificate": "certificate",
-    "short-course": "certificate",
-    "apprenticeship": "certificate"
-  };
-  const levelSelect = document.getElementById("level");
-  if (levelSelect && level && levelMap[level]) {
-    levelSelect.value = levelMap[level];
-  }
-
-  // ---- Pre-select mode
-  const modeMap = {
-    "on-campus": "on-campus",
-    "online": "online",
-    "hybrid": "hybrid",
-    "workshop": "on-campus",
-    "workplace": "on-campus"
-  };
-  const modeSelect = document.getElementById("mode");
-  if (modeSelect && mode && modeMap[mode]) {
-    modeSelect.value = modeMap[mode];
-  }
+  // ---- Pre-select school / level / mode
+  selectIfOptionExists(document.getElementById("school"), school);
+  selectIfOptionExists(document.getElementById("level"), level);
+  selectIfOptionExists(document.getElementById("mode"), mode);
 
   // ---- Add hidden fields so the submitted email names the choice
   const form = document.getElementById("applicationForm");
@@ -137,8 +110,8 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
    ============================================================ */
 (function mobileNav() {
   const menuToggle = document.getElementById("menuToggle");
-  const menuClose = document.getElementById("menuClose");
-  const mobileNav = document.getElementById("mobileNav");
+  const menuClose  = document.getElementById("menuClose");
+  const mobileNav  = document.getElementById("mobileNav");
   const navOverlay = document.getElementById("navOverlay");
   const body = document.body;
 
@@ -294,10 +267,6 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 
 /* ============================================================
    7. APPLICATION FORM — FormSubmit AJAX
-   ------------------------------------------------------------
-   Validates the form, then posts to FormSubmit's AJAX endpoint.
-   On success, hides the form and shows the confirmation panel.
-   On failure, restores the button and alerts the user.
    ============================================================ */
 (function applicationForm() {
   const form = document.getElementById("applicationForm");
